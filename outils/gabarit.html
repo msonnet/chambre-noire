@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Chambre noire</title>
+<meta name="description" content="Chambre noire, poèmes et dessins de Nathan Sonnet, à développer du doigt.">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#121212">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Chambre noire">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icones/icone-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icones/apple-touch-icon.png">
+<link rel="preload" href="polices/lora-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main id="chambre" tabindex="0" data-kind="entree" aria-label="Chambre noire, recueil à développer du doigt">
+<div id="lampe" aria-hidden="true"></div>
+
+<section class="planche active" data-kind="entree" data-id="couv" aria-label="Entrée">
+<div class="page couv">
+<p class="auteur">NATHAN SONNET</p>
+<h1>Chambre noire</h1>
+<span class="filet" aria-hidden="true"></span>
+<img src="img/couverture.webp" alt="Gravure d’une chambre obscure, en négatif">
+<p class="sous">poèmes &amp; dessins</p>
+</div>
+<span class="point" aria-hidden="true"></span>
+<button id="revoir" type="button">Revoir les tirages</button>
+</section>
+
+<section class="planche" data-kind="porte" aria-label="Devant la porte de la chambre noire">
+<div class="couloir" aria-hidden="true"></div>
+</section>
+
+<section class="planche" data-kind="seuil" aria-label="Entrée dans la chambre noire"></section>
+
+<!--PLANCHES-->
+
+<section class="planche" data-kind="sortie" aria-label="Sortie de la chambre noire">
+<div class="porte" aria-hidden="true"></div>
+<div class="dehors">
+<div class="dehors-page">
+<h2>Planche-contact</h2>
+<p class="chapeau">Les tirages développés dans la chambre noire. Toucher un tirage pour le regarder en grand.</p>
+<div class="grille" id="grille"></div>
+<div class="actions">
+<button class="lien" id="rentrer" type="button">Rentrer dans la chambre noire</button>
+<button class="lien discret" id="effacer" type="button">Effacer les tirages et tout redévelopper</button>
+</div>
+<div class="mentions">
+<p>Chambre noire, poèmes et dessins © Nathan Sonnet, 2025.</p>
+<p>Sons&nbsp;: enregistrements de Freesound.org. Ventilation&nbsp;: silencyo (CC BY 3.0). Obturateur, pas, coups, portes, interrupteur, eau, papier, pinces, robinet et vent&nbsp;: cabled_mess, colo777, carroll27, LampEight, Kinoton, toddcircle, odilonmarcenar, Nox_Sound, haulaway, matieke, Pipelenisf, leonseptavaux, ValentinPetite, Joao_Janz, felix.blume (domaine public, CC0). Police&nbsp;: Lora (SIL Open Font License).</p>
+</div>
+</div>
+</div>
+<div class="visionneuse" id="visionneuse" role="dialog" aria-modal="true" aria-label="Tirage">
+<div class="tirage" id="tirage"></div>
+<button class="vis-btn" id="vis-fermer" type="button" aria-label="Revenir à la planche-contact">×</button>
+<button class="vis-btn" id="vis-prec" type="button" aria-label="Tirage précédent">‹</button>
+<button class="vis-btn" id="vis-suiv" type="button" aria-label="Tirage suivant">›</button>
+</div>
+</section>
+
+<p id="consigne" aria-live="polite"></p>
+<button class="nav" id="prec" type="button" aria-label="Planche précédente">‹</button>
+<button class="nav" id="suiv" type="button" aria-label="Planche suivante">›</button>
+<button id="son" type="button" aria-label="Son" aria-pressed="true">avec le son</button>
+<noscript><p>Ce livre se développe du doigt&nbsp;: il a besoin de JavaScript.</p></noscript>
+</main>
+
+<script src="livre.js"></script>
+</body>
+</html>

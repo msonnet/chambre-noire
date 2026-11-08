@@ -1,0 +1,121 @@
+[
+ {
+  "id": 338219,
+  "file": "data/test-00028-of-00123.parquet",
+  "rg": 3,
+  "row": 67,
+  "license": 0
+ },
+ {
+  "id": 346466,
+  "file": "data/test-00030-of-00123.parquet",
+  "rg": 1,
+  "row": 66,
+  "license": 0
+ },
+ {
+  "id": 442355,
+  "file": "data/test-00038-of-00123.parquet",
+  "rg": 1,
+  "row": 37,
+  "license": 0
+ },
+ {
+  "id": 462556,
+  "file": "data/test-00086-of-00123.parquet",
+  "rg": 0,
+  "row": 68,
+  "license": 0
+ },
+ {
+  "id": 148882,
+  "file": "data/train-00054-of-01352.parquet",
+  "rg": 2,
+  "row": 32,
+  "license": 2
+ },
+ {
+  "id": 576593,
+  "file": "data/train-00191-of-01352.parquet",
+  "rg": 1,
+  "row": 58,
+  "license": 0
+ },
+ {
+  "id": 473712,
+  "file": "data/train-00216-of-01352.parquet",
+  "rg": 1,
+  "row": 79,
+  "license": 0
+ },
+ {
+  "id": 434193,
+  "file": "data/train-00320-of-01352.parquet",
+  "rg": 0,
+  "row": 98,
+  "license": 0
+ },
+ {
+  "id": 352439,
+  "file": "data/train-00376-of-01352.parquet",
+  "rg": 0,
+  "row": 70,
+  "license": 0
+ },
+ {
+  "id": 402464,
+  "file": "data/train-00408-of-01352.parquet",
+  "rg": 0,
+  "row": 34,
+  "license": 0
+ },
+ {
+  "id": 338220,
+  "file": "data/train-00513-of-01352.parquet",
+  "rg": 0,
+  "row": 51,
+  "license": 0
+ },
+ {
+  "id": 251435,
+  "file": "data/train-00546-of-01352.parquet",
+  "rg": 1,
+  "row": 46,
+  "license": 0
+ },
+ {
+  "id": 167434,
+  "file": "data/train-00561-of-01352.parquet",
+  "rg": 2,
+  "row": 12,
+  "license": 0
+ },
+ {
+  "id": 151894,
+  "file": "data/train-00595-of-01352.parquet",
+  "rg": 2,
+  "row": 47,
+  "license": 0
+ },
+ {
+  "id": 121546,
+  "file": "data/train-00693-of-01352.parquet",
+  "rg": 2,
+  "row": 10,
+  "license": 0
+ },
+ {
+  "id": 560352,
+  "file": "data/train-00874-of-01352.parquet",
+  "rg": 2,
+  "row": 90,
+  "license": 0
+ },
+ {
+  "id": 624484,
+  "file": "data/train-01302-of-01352.parquet",
+  "rg": 1,
+  "row": 46,
+  "license": 0
+ }
+]
