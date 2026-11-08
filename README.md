@@ -17,6 +17,15 @@ Le livre s'installe sur l'écran d'accueil, se lit sans réseau et reprend là o
 - `donnees/sons-emplacements.json` — où retrouver chaque enregistrement dans le jeu de données Hugging Face `benjamin-paine/freesound-laion-640k`
 - `outils/` — les scripts : extraction des poèmes (`poemes.py`) et des images (`images.py`) depuis le PDF, téléchargement (`telecharger_sons.py`) et préparation des sons (`prep_sons.py`), construction de la page (`construire.py`, `gabarit.html`, `sw-gabarit.js`)
 
+## Le seuil et la planche-contact
+
+- **Camera obscura** : au seuil, pendant qu'on laisse l'œil s'habituer au noir, l'image du dehors (des peupliers dans le vent) apparaît pâle, à l'envers et vivante sur le mur ; la lampe rouge l'efface et la chambre devient labo. Réglages : `SEUIL_LAMPE`, `SEUIL_FIN`, `OBSCURA` (luminosité) ; dessin dans `obscura()`.
+- **Planche-contact** : les vues tirées par contact en bandes de six (`PAR_BANDE`), perforations, numéros de vue et « CHAMBRE NOIRE » sur le bord ; les vues non développées restent noires ; un trait de crayon gras rouge entoure les vues regardées à l'agrandisseur.
+
+## Essai « papier »
+
+En ajoutant `?papier` à l'adresse, les poèmes se développent comme sur un vrai papier photo : une feuille rougie par la lampe dans la cuvette, le texte qui monte en sombre, puis la lumière blanche une fois le tirage fixé. C'est un essai à comparer avec la version actuelle (clair sur noir).
+
 ## Après une modification
 
 ```
