@@ -19,7 +19,7 @@ Le livre s'installe sur l'écran d'accueil, se lit sans réseau et reprend là o
 
 ## Le seuil et la planche-contact
 
-- **Camera obscura** : au seuil, pendant qu'on laisse l'œil s'habituer au noir, l'image du dehors (des peupliers dans le vent) apparaît pâle, à l'envers et vivante sur le mur ; la lampe rouge l'efface et la chambre devient labo. Réglages : `SEUIL_LAMPE`, `SEUIL_FIN`, `OBSCURA` (luminosité) ; dessin dans `obscura()`.
+- **Le seuil** : l'œil s'habitue au noir (on devine des formes), puis la lampe rouge s'allume et montre le labo : la lampe, la corde à linge où sèchent les derniers tirages du lecteur (à la première visite, des bandes-test et des pinces qui attendent), l'agrandisseur, les flacons, le robinet qui goutte, les trois cuvettes (révélateur, arrêt, fixateur). On s'approche de la cuvette et le premier tirage commence. Réglages : `SEUIL_LAMPE`, `SEUIL_APPROCHE`, `SEUIL_FIN` ; dessin dans `decor()`.
 - **Planche-contact** : les vues tirées par contact en bandes de six (`PAR_BANDE`), perforations, numéros de vue et « CHAMBRE NOIRE » sur le bord ; les vues non développées restent noires ; un trait de crayon gras rouge entoure les vues regardées à l'agrandisseur.
 
 ## Essai « papier »

@@ -56,8 +56,12 @@ canvas.expo{position:absolute;inset:0;width:100%;height:100%;display:block}
 .papier .planche[data-kind="texte"] .page.serree::before{top:calc(max(6vh,40px) + var(--haut) - 24px)}
 .papier .planche[data-kind="texte"] .page.tres-serree::before{top:calc(14px + var(--haut));bottom:calc(72px + var(--bas))}
 .papier .planche[data-kind="texte"] .page.epi::before{top:calc(48px + var(--haut))}
-/* La camera obscura du seuil : une petite image agrandie et floue */
-canvas.obscura{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:0;filter:blur(3px);transform:scale(1.06)}
+/* Le labo vu depuis la porte, sous la lampe rouge ; les tirages se balancent doucement sur la corde à linge */
+svg.labo{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:0;transform-origin:43% 80%;filter:blur(.4px)}
+.labo .seche{transform-box:view-box;animation:balance 5s ease-in-out infinite alternate}
+.labo .goutte{transform-box:view-box;animation:goutte 5.5s ease-in infinite;opacity:0}
+@keyframes goutte{0%,70%{transform:translateY(0);opacity:0}72%{opacity:.6}84%{transform:translateY(64px);opacity:.5}85%,100%{transform:translateY(64px);opacity:0}}
+@keyframes balance{from{transform:rotate(-1.3deg)}to{transform:rotate(1.3deg)}}
 
 /* Le couloir, devant la porte */
 .couloir{position:absolute;inset:0;pointer-events:none;background:radial-gradient(110% 45% at 50% 108%,rgba(233,229,220,.075),transparent 70%);transition:opacity 1.2s ease}
@@ -138,4 +142,4 @@ canvas.obscura{position:absolute;inset:0;width:100%;height:100%;display:block;op
 /* Le cadre de focus n'apparaît que si l'on se sert du clavier */
 .clavier #chambre:focus-visible{outline:1px solid rgba(233,229,220,.25);outline-offset:-4px}
 noscript p{position:absolute;inset:auto 0 40% 0;text-align:center;font-style:italic;color:var(--cendre)}
-@media (prefers-reduced-motion:reduce){.crayon.trace path{animation:none;stroke-dashoffset:0}.point{animation:none}.anneau{animation-name:fondu}#lampe,#consigne,.nav,.point,.dehors,.couloir{transition:none}}
+@media (prefers-reduced-motion:reduce){.labo .seche,.labo .goutte{animation:none}.crayon.trace path{animation:none;stroke-dashoffset:0}.point{animation:none}.anneau{animation-name:fondu}#lampe,#consigne,.nav,.point,.dehors,.couloir{transition:none}}

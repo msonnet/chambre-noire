@@ -246,9 +246,10 @@ if(PAPIER)document.documentElement.classList.add('papier');
 const DEV_TEXTE=5.2,FIXAGE=2,DEV_DESSIN=5,LUEUR=1.3,SEUIL_DESSIN=.75,GAIN_DESSIN=.45,AMBIANCE=.3;
 /* XVII : le silence avant le dernier vers (après le passage au blanc), puis sa lente apparition ; toucher l'écran ne relance plus l'attente */
 const SILENCE_XVII=2,APPARITION_XVII=1.5;
-/* Le seuil : la chambre est d'abord une camera obscura (l'image du dehors apparaît, à l'envers, à mesure que l'œil s'habitue),
-   puis la lampe rouge s'allume (SEUIL_LAMPE) et la chambre devient labo ; on entre dans le labo à SEUIL_FIN (secondes) */
-const SEUIL_LAMPE=reduit?1.5:5.8,SEUIL_FIN=reduit?2.5:8.4,OBSCURA=.62;
+/* Le seuil : l'œil s'habitue au noir (on devine des formes), la lampe rouge s'allume (SEUIL_LAMPE) et l'on voit le labo :
+   la lampe, la corde à linge où sèchent les tirages du lecteur, les cuvettes sur la paillasse, l'agrandisseur.
+   À SEUIL_APPROCHE on s'approche de la cuvette ; on y est à SEUIL_FIN (secondes) */
+const SEUIL_LAMPE=reduit?1.2:3,SEUIL_APPROCHE=reduit?2:6.6,SEUIL_FIN=reduit?2.6:8;
 /* Taille minimale des vers quand un poème doit se resserrer pour tenir sur l'écran (en pixels) */
 const VERS_MIN=11.5;
 const CLE='chambre-noire-tirages',CLE_POS='chambre-noire-position',CLE_CHOIX='chambre-noire-crayon';
@@ -503,50 +504,85 @@ function anneau(P,x,y){
   P.el.appendChild(a);setTimeout(()=>a.remove(),1300);
 }
 
-/* La camera obscura : par un trou, l'image du dehors se projette sur le mur, à l'envers et vivante.
-   Des peupliers dans le vent, peints très petit puis agrandis et flous, comme une projection. */
-const OBS_ARBRES=[{u:.36,h:.52,w:.075,n:46,ph:0},{u:.6,h:.3,w:.05,n:30,ph:2.1},{u:.79,h:.4,w:.06,n:38,ph:4.3}];
-const OBS_HAIE=Array.from({length:22},(_,k)=>({u:k/21,r:.025+.02*Math.abs(Math.sin(k*2.3)),dv:.01*Math.sin(k*1.7)}));
-function obscuraTaille(P){
-  const r=P.el.getBoundingClientRect();if(!r.width)return;
-  const W=90,H=Math.max(120,Math.round(W*r.height/r.width));
-  if(P.obs.width!==W||P.obs.height!==H){P.obs.width=W;P.obs.height=H;}
+/* Le grain de l'image, tiré une fois au hasard */
+let GRAIN=null;
+function grain(){
+  if(GRAIN)return GRAIN;
+  try{const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d'),d=x.createImageData(128,128);
+    for(let i=0;i<d.data.length;i+=4){const v=Math.random()*255|0;d.data[i]=d.data[i+1]=d.data[i+2]=v;d.data[i+3]=255;}
+    x.putImageData(d,0,0);GRAIN=c.toDataURL('image/png');}catch(_){GRAIN='';}
+  return GRAIN;
 }
-function obscura(P){
-  const x=P.ox,W=P.obs.width,H=P.obs.height,t=P.t,HZ=.64,k=W/H;
-  if(!W)return;
-  /* Le monde à l'endroit (u de 0 à 1, v de 0 en haut du ciel à 1 au sol), retourné d'un demi-tour sur le mur */
-  x.setTransform(-W,0,0,-H,W,H);
-  let g=x.createLinearGradient(0,0,0,HZ);
-  g.addColorStop(0,'#8fa3b3');g.addColorStop(1,'#dfe3e1');
-  x.fillStyle=g;x.fillRect(0,0,1,HZ);
-  g=x.createLinearGradient(0,HZ,0,1);g.addColorStop(0,'#59613f');g.addColorStop(1,'#262a1d');
-  x.fillStyle=g;x.fillRect(0,HZ,1,1-HZ);
-  /* Une haie au loin */
-  x.fillStyle='#4a543c';
-  OBS_HAIE.forEach(b=>{x.beginPath();x.ellipse(b.u,HZ+b.dv,b.r,b.r*k*1.4,0,0,7);x.fill();});
-  /* Les peupliers : le vent les penche et fait trembler le haut du feuillage */
-  const souffle=Math.sin(t*.45)*.6+Math.sin(t*.17+1)*.4;
-  OBS_ARBRES.forEach(a=>{
-    x.fillStyle='#3a3226';x.fillRect(a.u-.005,HZ-a.h*.2,.01,a.h*.2+.01);
-    /* Un peuplier d'Italie : une colonne, large au premier tiers, qui s'effile vers la pointe */
-    for(let j=0;j<a.n;j++){
-      const f=j/(a.n-1),y=HZ-a.h*(.1+.9*f);
-      const larg=a.w*(f<.3?.75+.85*f:1.05*Math.pow(1-f,.7)+.08);
-      const dx=(souffle*.014+Math.sin(t*2.3+j*1.3+a.ph)*.003)*f*f+Math.sin(j*12.9898+a.ph)*larg*.18;
-      const r=larg*(.62+.18*Math.sin(j*4.1+a.ph)),q=Math.abs(Math.sin(j*78.233+a.ph*3.1)*43758.5)%1;
-      /* Le côté au soleil est plus clair */
-      x.fillStyle=q<.22?'#5d7048':q<.6?'#3b4c31':'#2f3d27';
-      x.beginPath();x.ellipse(a.u+dx+(q<.22?-larg*.3:0),y,q<.22?r*.7:r,(q<.22?r*.7:r)*k*1.5,0,0,7);x.fill();
+/* Le labo vu depuis la porte, sous la lampe rouge. Sur la corde à linge sèchent les derniers tirages du lecteur
+   (à la première visite : des bandes-test et des pinces qui attendent). */
+function decor(P){
+  const tir=planches.filter(Q=>estTirage(Q)&&Q.fixe).slice(-6);
+  const X=[33,97,161,225,289,353],ligne=x=>250+160*((x+10)/410)*(1-(x+10)/410);
+  const h=(k,n)=>Math.abs(Math.sin(k*91.7+n*12.3)*43758.5)%1;
+  let corde='';
+  X.forEach((x,k)=>{
+    const y=ligne(x),Q=tir[k],a=((h(k,1)-.5)*5).toFixed(2),dur=(4.2+h(k,2)*2.6).toFixed(2),del=(-h(k,3)*4).toFixed(2);
+    let feuille='';
+    if(Q&&Q.kind==='texte'){
+      let lignes='',yy=y+18;const n=Q.lignes?Math.min(14,Q.lignes.length):10;
+      for(let i=0;i<n;i++){const w=16+h(k,i+5)*22;lignes+=`<rect x="${x-20}" y="${yy.toFixed(1)}" width="${w.toFixed(1)}" height="1.6" fill="#2a0c08" opacity=".75"/>`;yy+=i%4===3?8.4:5.6;}
+      feuille=`<rect x="${x-28}" y="${y+5}" width="56" height="88" fill="url(#papier-rouge)"/>${lignes}`;
+    }else if(Q){
+      feuille=`<rect x="${x-28}" y="${y+5}" width="56" height="88" fill="#150706"/><image href="${Q.el.dataset.vignette}" x="${x-25}" y="${y+8}" width="50" height="82" preserveAspectRatio="xMidYMid meet" filter="url(#rougir)"/>`;
+    }else if(k%2){
+      let b='';for(let i=0;i<6;i++)b+=`<rect x="${x-12}" y="${(y+5+i*15).toFixed(1)}" width="24" height="15" fill="${['#93382a','#7c2e22','#64241b','#4c1b14','#34120d','#1f0a07'][i]}"/>`;
+      feuille=b;
     }
+    const pince=`<rect x="${x-3}" y="${y-9}" width="6" height="17" rx="1" fill="#3e1b13"/><rect x="${x-3}" y="${y-9}" width="2" height="17" fill="#6a2a1c" opacity=".7"/>`;
+    corde+=`<g class="seche" style="transform-origin:${x}px ${y.toFixed(1)}px;animation-duration:${dur}s;animation-delay:${del}s"><g transform="rotate(${a} ${x} ${y.toFixed(1)})">${feuille}</g>${pince}</g>`;
   });
-  /* Le passage d'un nuage */
-  x.fillStyle='rgba(18,18,18,'+(.12+.1*Math.sin(t*.23)).toFixed(3)+')';x.fillRect(0,0,1,1);
-  /* Le cercle de la projection, qui s'éteint vers les bords */
-  x.setTransform(1,0,0,1,0,0);
-  g=x.createRadialGradient(W/2,H/2,Math.min(W,H)*.18,W/2,H/2,Math.max(W,H)*.62);
-  g.addColorStop(0,'rgba(18,18,18,0)');g.addColorStop(1,'rgba(18,18,18,1)');
-  x.fillStyle=g;x.fillRect(0,0,W,H);
+  const cuves=[0,1,2].map(k=>{
+    const x=118+k*92,nom=['révélateur','arrêt','fixateur'][k];
+    return `<polygon points="${x+4},652 ${x+84},652 ${x+89},694 ${x-1},694" fill="#1a0807" stroke="#5c1a12" stroke-width=".8"/>
+      <polygon points="${x+9},656 ${x+79},656 ${x+82},689 ${x+6},689" fill="url(#liquide)"/>
+      <path d="M${x+18} 662 Q${x+44} 659 ${x+70} 663" stroke="#ff6a4a" stroke-width="1.2" opacity=".28" fill="none"/>
+      <text x="${x+44}" y="712" text-anchor="middle" font-family="Lora, Georgia, serif" font-style="italic" font-size="8.5" fill="#7a281c">${nom}</text>`;
+  }).join('');
+  P.decor.innerHTML=`<defs>
+    <radialGradient id="halo" cx="195" cy="64" r="430" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#c8281a" stop-opacity=".5"/><stop offset=".45" stop-color="#7a160e" stop-opacity=".22"/><stop offset="1" stop-color="#2a0705" stop-opacity="0"/></radialGradient>
+    <radialGradient id="vitre" cx=".5" cy=".5" r=".6"><stop offset="0" stop-color="#ff7a55"/><stop offset=".6" stop-color="#d8301c"/><stop offset="1" stop-color="#8a150c"/></radialGradient>
+    <linearGradient id="papier-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a7402f"/><stop offset="1" stop-color="#6e2419"/></linearGradient>
+    <linearGradient id="liquide" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5a1710"/><stop offset="1" stop-color="#1c0605"/></linearGradient>
+    <linearGradient id="paillasse" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5a1810"/><stop offset=".04" stop-color="#1e0907"/><stop offset="1" stop-color="#090404"/></linearGradient>
+    <radialGradient id="ombre" cx=".5" cy=".42" r=".75"><stop offset=".55" stop-color="#0a0505" stop-opacity="0"/><stop offset="1" stop-color="#0a0505" stop-opacity=".95"/></radialGradient>
+    <pattern id="grain" width="128" height="128" patternUnits="userSpaceOnUse"><image href="${grain()}" width="128" height="128"/></pattern>
+    <filter id="rougir"><feColorMatrix type="matrix" values=".8 0 0 0 0  .25 0 0 0 0  .2 0 0 0 0  0 0 0 1 0"/></filter>
+  </defs>
+  <rect width="390" height="844" fill="#0b0606"/>
+  <rect width="390" height="844" fill="url(#halo)"/>
+  <!-- l'étagère et ses flacons -->
+  <rect x="244" y="430" width="150" height="4" fill="#2c0d09"/>
+  <rect x="266" y="380" width="22" height="50" rx="3" fill="#140605" stroke="#5c1a12" stroke-width=".6"/><rect x="272" y="368" width="10" height="14" fill="#140605" stroke="#5c1a12" stroke-width=".6"/><rect x="268" y="398" width="18" height="14" fill="#3a110c"/>
+  <rect x="298" y="392" width="18" height="38" rx="3" fill="#140605" stroke="#5c1a12" stroke-width=".6"/><rect x="302" y="382" width="10" height="11" fill="#140605" stroke="#5c1a12" stroke-width=".6"/>
+  <rect x="326" y="372" width="26" height="58" rx="4" fill="#140605" stroke="#5c1a12" stroke-width=".6"/><rect x="333" y="360" width="12" height="13" fill="#140605" stroke="#5c1a12" stroke-width=".6"/><rect x="328" y="394" width="22" height="16" fill="#3a110c"/>
+  <!-- l'agrandisseur -->
+  <rect x="40" y="330" width="8" height="300" fill="#120605" stroke="#4a120d" stroke-width=".6"/>
+  <rect x="14" y="358" width="66" height="46" rx="3" fill="#170807" stroke="#5c1a12" stroke-width=".8"/>
+  <rect x="24" y="404" width="46" height="26" fill="#0d0504"/><path d="M24 410H70M24 416H70M24 422H70" stroke="#3a100b" stroke-width=".8"/>
+  <rect x="39" y="430" width="16" height="10" fill="#0a0303" stroke="#4a120d" stroke-width=".5"/>
+  <rect x="10" y="628" width="104" height="10" fill="#1a0807" stroke="#4a120d" stroke-width=".6"/>
+  <!-- la lampe inactinique -->
+  <path d="M195 0V42" stroke="#2a0c08" stroke-width="1.5"/>
+  <rect x="163" y="40" width="64" height="40" rx="4" fill="#1a0b08" stroke="#3a120d"/>
+  <rect x="169" y="46" width="52" height="28" rx="2" fill="url(#vitre)"/>
+  <!-- la corde à linge et les tirages qui sèchent -->
+  <path d="M-10 250 Q195 330 400 250" stroke="#6a2218" stroke-width="1.2" fill="none"/>
+  ${corde}
+  <!-- la paillasse et les trois cuvettes -->
+  <rect x="0" y="638" width="390" height="206" fill="url(#paillasse)"/>
+  ${cuves}
+  <path d="M136 666 L176 640 M141 668 L180 643" stroke="#2a0c08" stroke-width="2.2" stroke-linecap="round"/>
+  <!-- le robinet, au-dessus des cuvettes ; une goutte tombe de temps en temps -->
+  <path d="M378 470V560Q378 578 360 578H344" stroke="#2c0e09" stroke-width="7" stroke-linecap="round" fill="none"/>
+  <path d="M375.5 470V560Q375.5 575.5 360 575.5H345" stroke="#7a2a1d" stroke-width="1.2" fill="none" opacity=".8"/>
+  <ellipse class="goutte" cx="343" cy="584" rx="1.6" ry="2.4" fill="#ff6a4a" opacity=".55"/>
+  <rect width="390" height="844" fill="url(#grain)" opacity=".09"/>
+  <rect width="390" height="844" fill="url(#ombre)"/>`;
 }
 
 const types={
@@ -600,22 +636,22 @@ const types={
     }
   },
   seuil:{
-    init(P){P.t=0;P.parti=false;P.cible=null;P.clic=false;P.obs=P.el.querySelector('.obscura');P.ox=P.obs.getContext('2d');P.vue=0;},
-    enter(P,avant){P.t=0;P.parti=false;P.clic=false;P.vue=0;P.obs.style.opacity=0;obscuraTaille(P);if(avant==='sortie')SON.porte(true);},
+    init(P){P.t=0;P.parti=false;P.cible=null;P.clic=false;P.decor=P.el.querySelector('.labo');},
+    enter(P,avant){P.t=0;P.parti=false;P.clic=false;decor(P);P.decor.style.opacity=0;P.decor.style.transform='';if(avant==='sortie')SON.porte(true);},
     down(P){P.t=Math.max(P.t,SEUIL_LAMPE-.1);},
     tick(P,dt){
       P.t+=dt;
-      /* L'œil s'habitue : l'image du dehors monte peu à peu ; la lampe rouge l'efface */
-      const v=lisse(clamp((P.t-.9)/3.4))*(1-lisse(clamp((P.t-SEUIL_LAMPE)/1.5)));
-      if(v>0||P.vue>0){P.vue=v;P.obs.style.opacity=(v*OBSCURA).toFixed(3);if(v>0)obscura(P);}
+      /* L'œil s'habitue : on devine des formes ; la lampe s'allume et montre le labo ; on s'approche de la cuvette */
+      const avant=.07*lisse(clamp((P.t-.9)/(SEUIL_LAMPE-.9))),allume=lisse(clamp((P.t-SEUIL_LAMPE)/.35)),va=lisse(clamp((P.t-SEUIL_APPROCHE)/(SEUIL_FIN-SEUIL_APPROCHE)));
+      P.decor.style.opacity=(Math.max(avant,allume)*(1-va)).toFixed(3);
+      if(va>0&&!reduit)P.decor.style.transform='scale('+(1+.22*va).toFixed(4)+')';
       if(P.t>SEUIL_LAMPE&&!P.clic){P.clic=true;SON.interrupteur(true);}
       if(P.t>=SEUIL_FIN&&!P.parti){
         P.parti=true;const c=P.cible!=null?P.cible:cur+1;P.cible=null;montrer(c);
       }
     },
     lampe(P){return P.t>SEUIL_LAMPE?AMBIANCE:0;},
-    /* Par le petit trou, on entend aussi, très bas, le vent dans les peupliers */
-    son(P){return [1,.14*P.vue,.8];},
+    son(){return [1,0,.8];},
     consigne(P){return P.t>.8&&P.t<SEUIL_LAMPE?'Laisser l’œil s’habituer au noir':'';}
   },
   texte:{
@@ -836,7 +872,6 @@ $('vis-suiv').addEventListener('click',()=>visNav(1));
 addEventListener('resize',()=>{
   const P=planches[cur];
   if(P.kind==='dessin')taille(P);
-  if(P.kind==='seuil')obscuraTaille(P);
   if(P.kind==='texte'){P.ajuste=null;ajuster(P);}
   if(P.kind==='sortie')echelle();
   if(vis.ouverte)afficherVis();
