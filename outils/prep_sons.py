@@ -84,6 +84,24 @@ A['rincage']=(r,[[0,round(len(r)/SR,3)]],96)
 x=lire('346466')
 f=[regler(couper(x,a-.02,c+.08,.02,.1),rms=-28,crete=-6) for a,c in [(.62,1.15),(3.62,4.19),(4.62,4.85),(5.04,5.31),(5.44,5.74),(9.19,9.66),(9.8,10.19),(12.16,12.77)]]
 s,pos=sprite(f);A['feuilles']=(s,pos,96)
+# 14. Le tourne-disque : l'aiguille posée (Breviceps, Stratocube, CC0), puis relevée (thaighaudio, CC0)
+x=lire('556722');pose1=regler(couper(x,.04,2.2,.003,.6),crete=-6)
+x=lire('456281');pose2=regler(couper(x,0,.95,.002,.3),crete=-6)
+x=lire('350309');leve1=regler(couper(x,1.68,2.02,.002,.08),crete=-8);leve2=regler(couper(x,2.68,3.02,.002,.08),crete=-8)
+s,pos=sprite([pose1,pose2,leve1,leve2]);A['platine']=(s,pos,112)
+# 15. Les craquements du disque (nervousneal, CC0) et le dernier sillon (Groschi, CC0), en boucle
+x=lire('500975');c=regler(couper(x,.5,18,.3,.3),rms=-34,crete=-8);A['craquement']=(c,[[0,round(len(c)/SR,3)]],64)
+x=lire('423893');r=regler(couper(x,.2,11.3,.2,.2),rms=-34,crete=-6);A['sillon']=(r,[[0,round(len(r)/SR,3)]],64)
+# 16. La vie du bâtiment, très rare : un plancher qui craque à l'étage (Joao_Janz, Greg_Surr), un radiateur (willungawillun), l'eau dans un tuyau (kyles), tous CC0
+b=[regler(lire(f),crete=-6) for f in ('504094','504130','504081')]
+b.append(regler(couper(lire('590157'),.2,1.65,.01,.2),crete=-6))
+x=lire('122000');b+=[regler(couper(x,a,c,.003,.15),crete=-6) for a,c in ((.6,1.15),(2.3,3.05),(7.4,8.0))]
+x=lire('451937');b.append(regler(couper(x,10,19,1.2,2),rms=-30,crete=-8))
+s,pos=sprite([fondu(v,.005,.08) for v in b]);A['batiment']=(s,pos,80)
+# 17. La pince qui tape le bord de la cuvette (DJ_SoMaR, TiidWunduniik, CC0)
+x=lire('531195');p=[regler(couper(x,max(0,t-.02),t+.22,.002,.08),crete=-6) for t in (0,.65,1.25,1.9)]
+x=lire('489530');p.append(regler(couper(x,.48,.85,.002,.1),crete=-6))
+s,pos=sprite(p);A['pincettes']=(s,pos,96)
 meta={};total=0
 with tempfile.TemporaryDirectory() as tmp:
     for k,(sig,pos,kbps) in A.items():

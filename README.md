@@ -22,6 +22,20 @@ Le livre s'installe sur l'écran d'accueil, se lit sans réseau et reprend là o
 - **Le seuil** : l'œil s'habitue au noir (on devine des formes), puis la lampe rouge s'allume et montre le labo : la lampe, la corde à linge où sèchent les derniers tirages du lecteur (à la première visite, des bandes-test et des pinces qui attendent), l'agrandisseur, les flacons, le robinet qui goutte, les trois cuvettes (révélateur, arrêt, fixateur). On s'approche de la cuvette et le premier tirage commence. Réglages : `SEUIL_LAMPE`, `SEUIL_APPROCHE`, `SEUIL_FIN` ; dessin dans `decor()`.
 - **Planche-contact** : les vues tirées par contact en bandes de six (`PAR_BANDE`), perforations, numéros de vue et « CHAMBRE NOIRE » sur le bord ; les vues non développées restent noires ; un trait de crayon gras rouge entoure les vues regardées à l'agrandisseur.
 
+## Les gestes uniques de la visite
+
+- **Allumer la lampe** : au seuil, dans le noir, le voyant de l'interrupteur apparaît ; le lecteur allume lui-même la lampe rouge (toucher l'interrupteur ou l'écran).
+- **Sortir à tout moment** : « sortir », en haut à droite du labo. On ouvre le robinet pour rincer les tirages, puis on pousse la porte. La planche où l'on était est gardée ; « Rentrer dans la chambre noire » y ramène.
+- **Le tourne-disque** : son voyant ambré, sous « sortir ». Le toucher ouvre ses commandes : poser l'aiguille, piste suivante, relever l'aiguille, et retourner le disque (face A, face B). Le son passe par le labo (petit haut-parleur, craquements du vinyle) ; à la fin d'une face, l'aiguille tourne dans le dernier sillon ; l'aiguille se relève d'elle-même pour le silence de XVII. Les disques ne sont pas gardés hors ligne (25 Mo) : ils se lisent sur le réseau.
+
+## Le disque
+
+Chopin (Musopen, *The Complete Works of Frédéric Chopin*, CC0), Rachmaninov et Satie (Jaan Patterson, Free Music Archive, CC0). Liste et crédits dans `donnees/musique.json` ; préparation : `python3 outils/prep_musique.py <dossier des enregistrements>` (MP3 mono 64 kb/s, niveau égalisé, 0,9 s de silence au début), puis `python3 outils/construire.py` (les crédits de la planche-contact suivent).
+
+## Les bruitages ajoutés
+
+Très rarement, la vie du bâtiment (un plancher à l'étage, un radiateur, de l'eau dans un tuyau), entendue à travers le plafond ; parfois, la pince qui tape le bord de la cuvette quand on sort un poème du bain. Tous CC0, préparés par `outils/prep_sons.py`.
+
 ## Essai « papier »
 
 En ajoutant `?papier` à l'adresse, les poèmes se développent comme sur un vrai papier photo : une feuille rougie par la lampe dans la cuvette, le texte qui monte en sombre, puis la lumière blanche une fois le tirage fixé. C'est un essai à comparer avec la version actuelle (clair sur noir).

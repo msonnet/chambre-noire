@@ -2,15 +2,16 @@
    Le son : de vrais enregistrements (Freesound, licences libres), un fichier MP3 par famille de sons (sons/*.mp3),
    chaque fichier étant une planche de segments [début, durée] décrite dans sons/meta.json ; aucun son n'est fabriqué. */
 function creerSon(){
-  const NOMS=['obturateur','pas','coups','portes','ventilation','interrupteur','gouttes','bain','papier','pince','rincage','feuilles','dehors'];
+  const NOMS=['obturateur','pas','coups','portes','ventilation','interrupteur','gouttes','bain','papier','pince','rincage','feuilles','dehors','platine','craquement','sillon','batiment','pincettes'];
   const CLE_SON='chambre-noire-son';
   /* Volumes (0 à 1) : les réglages principaux */
   const VOL={ventilation:.16,dehors:.3,pas:.6,coup:.7,porte:.62,porteDouce:.5,interrupteur:.42,goutte:.18,bain:.55,egoutte:.13,
-    obturateur:.55,papier:.5,pince:.42,rincage:.45,feuille:.3};
+    obturateur:.55,papier:.5,pince:.42,rincage:.45,feuille:.3,
+    musique:.5,craquement:.55,sillon:.5,platine:.5,batiment:.2,pincettes:.32};
   let actif=true;try{actif=localStorage.getItem(CLE_SON)!=='0';}catch(_){}
   let ctx=null,hors=false,maitre=null,filtreLabo=null,charge=null,DON=null;
   const tampons={},bus={},cibles={labo:0,dehors:0},journal=[],erreurs=[],boucles=[],pioches={},fichiers={};
-  let etouffe=null,prochGoutte=0,pasSon=null,nDev=0,dev=null,bainSons=[],attente=[];
+  let etouffe=null,prochGoutte=0,prochBat=0,pasSon=null,nDev=0,dev=null,bainSons=[],attente=[],etage=null;
   const hasard=(a,b)=>a+Math.random()*(b-a);
   /* Les fichiers sont demandés dès l'ouverture du livre : ils seront prêts au premier toucher */
   const meta=fetch('sons/meta.json').then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}).then(m=>{DON=m;return m;});
@@ -57,6 +58,8 @@ function creerSon(){
     filtreLabo=ctx.createBiquadFilter();filtreLabo.type='lowpass';filtreLabo.frequency.value=18000;filtreLabo.Q.value=.5;
     bus.labo.connect(filtreLabo);filtreLabo.connect(maitre);
     bus.dehors=ctx.createGain();bus.dehors.gain.value=0;bus.dehors.connect(maitre);
+    /* La vie du bâtiment, à travers les murs et le plafond */
+    etage=ctx.createBiquadFilter();etage.type='lowpass';etage.frequency.value=1600;etage.Q.value=.3;etage.connect(bus.labo);bus.etage=etage;
     /* Décoder dans l'ordre où l'on en aura besoin */
     charge=meta.then(()=>NOMS.reduce((p,nom)=>p.then(()=>decoder(nom).then(()=>{
       if(nom==='ventilation')boucle('ventilation',bus.labo,VOL.ventilation);
@@ -121,7 +124,80 @@ function creerSon(){
     if(v){bainSons.push(v);if(bainSons.length>3)bainSons.shift();}
     dev.n++;dev.dernier=ctx.currentTime;
   }
+  /* Le tourne-disque : un disque à deux faces (musique/disques.json), lu par un élément audio qui passe par le labo
+     (un petit haut-parleur, les craquements du vinyle) ; à la fin de la face, l'aiguille tourne dans le dernier sillon. */
+  const PL={disques:null,face:'a',piste:0,joue:false,fin:false,el:null,craq:null,sillon:null,attente:null};
+  try{const f=localStorage.getItem('chambre-noire-face');if(f)PL.face=f;}catch(_){}
+  fetch('musique/disques.json').then(r=>r.ok?r.json():null).then(d=>{PL.disques=d;if(d&&!d[PL.face])PL.face=Object.keys(d)[0];}).catch(()=>{});
+  function plChaine(){
+    if(PL.el||!ctx)return;
+    const el=new Audio();el.preload='auto';PL.el=el;
+    try{
+      const s=ctx.createMediaElementSource(el),hp=ctx.createBiquadFilter(),lp=ctx.createBiquadFilter(),g=ctx.createGain();
+      hp.type='highpass';hp.frequency.value=110;lp.type='lowpass';lp.frequency.value=5200;lp.Q.value=.4;g.gain.value=VOL.musique;
+      s.connect(hp);hp.connect(lp);lp.connect(g);g.connect(bus.labo);
+    }catch(e){erreurs.push('platine : '+(e&&e.message||e));}
+    el.addEventListener('ended',()=>{
+      const pistes=PL.disques[PL.face].pistes;
+      if(PL.piste<pistes.length-1){PL.piste++;plCharger(true);}
+      else{PL.fin=true;plBoucle('craq',false);plBoucle('sillon',true);}
+    });
+    el.addEventListener('error',()=>{if(PL.joue){erreurs.push('platine : piste illisible');}});
+  }
+  function plBoucle(nom,on){
+    const cle=nom==='craq'?'craquement':'sillon';
+    if(!on){if(PL[nom]){eteindre(PL[nom],.25);PL[nom]=null;}return;}
+    if(PL[nom]||!tampons[cle])return;
+    const s=ctx.createBufferSource(),g=ctx.createGain();s.buffer=tampons[cle];s.loop=true;s.loopStart=.05;s.loopEnd=tampons[cle].duration-.05;
+    g.gain.value=VOL[cle];s.connect(g);g.connect(bus.labo);s.start(ctx.currentTime+.05);PL[nom]={s,g,t:ctx.currentTime+.05};
+  }
+  function plCharger(jouerTout){
+    const p=PL.disques[PL.face].pistes[PL.piste];
+    PL.el.src=p.fichier;PL.el.currentTime=0;
+    if(jouerTout){const pr=PL.el.play();if(pr&&pr.catch)pr.catch(e=>erreurs.push('platine : '+(e&&e.message||e)));}
+  }
+  const platine={
+    pret:()=>!!PL.disques,
+    etat:()=>{const d=PL.disques&&PL.disques[PL.face];const p=d&&d.pistes[PL.piste];return {joue:PL.joue,fin:PL.fin,face:PL.face,faces:PL.disques?Object.keys(PL.disques).map(k=>({cle:k,titre:PL.disques[k].titre})):[],piste:PL.piste,nPistes:d?d.pistes.length:0,titre:p?p.titre:'',auteur:p?p.auteur+(p.interprete?' ('+p.interprete+')':''):'',position:PL.el?Math.round(PL.el.currentTime*10)/10:0,lit:!!(PL.el&&!PL.el.paused)};},
+    /* Poser l'aiguille : le bras descend, le sillon crépite, la musique arrive (chaque piste commence par un court silence) */
+    poser(){
+      if(!PL.disques||PL.joue||!vivant())return;
+      plChaine();if(!PL.el)return;
+      PL.joue=true;PL.fin=false;
+      jouer('platine',pioche('platine')%2,{gain:VOL.platine,bus:'labo',pan:-.15});
+      plBoucle('craq',true);plCharger(true);
+    },
+    relever(auto){
+      if(!PL.joue)return;
+      PL.joue=false;PL.fin=false;try{PL.el.pause();}catch(_){}
+      plBoucle('craq',false);plBoucle('sillon',false);
+      if(vivant())jouer('platine',2+(Math.random()<.5?0:1),{gain:VOL.platine*.8,bus:auto?null:'labo',pan:-.15});
+    },
+    suivante(){
+      if(!PL.joue||!PL.disques)return;
+      const n=PL.disques[PL.face].pistes.length;
+      PL.piste=PL.fin?0:(PL.piste+1)%n;PL.fin=false;plBoucle('sillon',false);plBoucle('craq',true);
+      jouer('platine',2,{gain:VOL.platine*.7,bus:'labo',pan:-.15});
+      jouer('platine',1,{t:ctx.currentTime+.35,gain:VOL.platine*.8,bus:'labo',pan:-.15});
+      plCharger(true);
+    },
+    /* Retourner le disque : on relève l'aiguille, on retourne le disque, et l'on repose l'aiguille au début de l'autre face */
+    retourner(face){
+      if(!PL.disques||!PL.disques[face]||face===PL.face)return;
+      const jouait=PL.joue;
+      if(jouait)platine.relever();
+      PL.face=face;PL.piste=0;try{localStorage.setItem('chambre-noire-face',face);}catch(_){}
+      jouer('feuilles',pioche('feuilles'),{gain:VOL.feuille*1.2,bus:'labo'});
+      if(jouait){PL.joue=false;platine.poser();}
+    },
+    /* L'onglet caché : la musique s'arrête de tourner avec lui */
+    pause(on){if(PL.el&&PL.joue&&!PL.fin){try{on?PL.el.pause():PL.el.play();}catch(_){}}}
+  };
+  document.addEventListener('visibilitychange',()=>platine.pause(document.hidden));
+  Object.keys(platine).forEach(k=>{const f=platine[k];platine[k]=function(){try{return f.apply(platine,arguments);}catch(e){erreurs.push('platine '+k+' : '+(e&&e.message||e));return null;}};});
+
   const api={
+    platine,
     debloquer,
     ecoute:vivant,
     actif:()=>actif,
@@ -158,6 +234,13 @@ function creerSon(){
           prochGoutte=t+hasard(6,17);
         }
       }else prochGoutte=0;
+      /* Très rarement, la vie du bâtiment : un plancher qui craque à l'étage, un radiateur, de l'eau dans un tuyau */
+      if(cibles.labo>.5&&!etouffe&&tampons.batiment){
+        if(t>=prochBat){
+          if(prochBat){const i=pioche('batiment');jouer('batiment',i,{t,gain:VOL.batiment*hasard(.55,1)*(i===7?.7:1),vitesse:hasard(.95,1.05),pan:hasard(-.6,.6),bus:'etage'});}
+          prochBat=t+hasard(50,130);
+        }
+      }else if(cibles.labo<=.5)prochBat=0;
     },
     /* Le couloir : nos pas jusqu'à la porte */
     pas(){api.stopPas();if(!vivant())return;pasSon=jouer('pas',0,{t:ctx.currentTime+.25,gain:VOL.pas});},
@@ -175,15 +258,18 @@ function creerSon(){
     interrupteur(on){jouer('interrupteur',on?0:1,{gain:VOL.interrupteur,pan:.2});},
     /* Le sténopé : l'obturateur s'ouvre un quart de seconde */
     obturateur(){jouerBientot('obturateur',pioche('obturateur'),{gain:VOL.obturateur});},
-    /* La sortie : on rince les tirages sous le robinet, la lampe s'éteint, la porte s'ouvre sur le jour.
-       Renvoie le temps du rinçage, pour que l'image l'attende. */
-    sortir(){
+    /* La sortie, en deux gestes du lecteur : il ouvre le robinet pour rincer les tirages (renvoie la durée du rinçage),
+       puis il pousse la porte : la lampe s'éteint, la porte s'ouvre sur le jour. */
+    rincer(){
       if(!vivant()||!tampons.rincage)return 0;
-      const t=ctx.currentTime,r=3.9;
-      jouer('rincage',0,{t:t+.15,gain:VOL.rincage,pan:-.3});
-      jouer('interrupteur',1,{t:t+r+.35,gain:VOL.interrupteur,pan:.2});
-      jouer('portes',1,{t:t+r+1,gain:VOL.porte*.9});
-      return r;
+      jouer('rincage',0,{t:ctx.currentTime+.05,gain:VOL.rincage,pan:-.3});
+      return 3.9;
+    },
+    pousser(){
+      if(!vivant())return;
+      const t=ctx.currentTime;
+      jouer('interrupteur',1,{t:t+.05,gain:VOL.interrupteur,pan:.2});
+      jouer('portes',1,{t:t+.6,gain:VOL.porte*.9});
     },
     /* Le bain : souvent, on entend d'abord la feuille qu'on glisse ; puis un seul mouvement d'eau lent,
        parfois un second plus doux si l'on tient longtemps ; quand le doigt se lève, l'eau se calme. */
@@ -206,6 +292,7 @@ function creerSon(){
       if(dev)dev.appui=false;
       if(!vivant()||Math.random()<.45)return;
       if(dev)dev.egoutte=true;
+      if(Math.random()<.45)jouer('pincettes',pioche('pincettes'),{t:ctx.currentTime+.08,gain:VOL.pincettes*hasard(.7,1),vitesse:hasard(.94,1.06),pan:hasard(.05,.3)});
       let t=ctx.currentTime+hasard(.3,.6);
       const n=Math.random()<.5?2:3;
       for(let k=0;k<n;k++){jouer('gouttes',pioche('gouttes'),{t,gain:VOL.egoutte*hasard(.6,1),vitesse:hasard(1.05,1.25),pan:hasard(.05,.25)});t+=hasard(.12,.32);}
@@ -246,10 +333,11 @@ if(PAPIER)document.documentElement.classList.add('papier');
 const DEV_TEXTE=5.2,FIXAGE=2,DEV_DESSIN=5,LUEUR=1.3,SEUIL_DESSIN=.75,GAIN_DESSIN=.45,AMBIANCE=.3;
 /* XVII : le silence avant le dernier vers (après le passage au blanc), puis sa lente apparition ; toucher l'écran ne relance plus l'attente */
 const SILENCE_XVII=2,APPARITION_XVII=1.5;
-/* Le seuil : l'œil s'habitue au noir (on devine des formes), la lampe rouge s'allume (SEUIL_LAMPE) et l'on voit le labo :
-   la lampe, la corde à linge où sèchent les tirages du lecteur, les cuvettes sur la paillasse, l'agrandisseur.
-   À SEUIL_APPROCHE on s'approche de la cuvette ; on y est à SEUIL_FIN (secondes) */
-const SEUIL_LAMPE=reduit?1.2:3,SEUIL_APPROCHE=reduit?2:6.6,SEUIL_FIN=reduit?2.6:8;
+/* Le seuil : l'œil s'habitue au noir (on devine des formes) ; le voyant de l'interrupteur apparaît (SEUIL_VOYANT) ;
+   le lecteur allume lui-même la lampe rouge et voit le labo : la lampe, la corde à linge où sèchent ses tirages,
+   les cuvettes sur la paillasse, l'agrandisseur. SEUIL_REGARD secondes après l'allumage, on s'approche de la cuvette,
+   en SEUIL_APPROCHE secondes */
+const SEUIL_VOYANT=reduit?.5:1.8,SEUIL_REGARD=reduit?1.2:3.4,SEUIL_APPROCHE=reduit?.6:1.6;
 /* Taille minimale des vers quand un poème doit se resserrer pour tenir sur l'écran (en pixels) */
 const VERS_MIN=11.5;
 const CLE='chambre-noire-tirages',CLE_POS='chambre-noire-position',CLE_CHOIX='chambre-noire-crayon';
@@ -543,7 +631,8 @@ function decor(P){
       <path d="M${x+18} 662 Q${x+44} 659 ${x+70} 663" stroke="#ff6a4a" stroke-width="1.2" opacity=".28" fill="none"/>
       <text x="${x+44}" y="712" text-anchor="middle" font-family="Lora, Georgia, serif" font-style="italic" font-size="8.5" fill="#7a281c">${nom}</text>`;
   }).join('');
-  P.decor.innerHTML=`<defs>
+  const pre=P.kind;
+  P.decor.innerHTML=(`<defs>
     <radialGradient id="halo" cx="195" cy="64" r="430" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#c8281a" stop-opacity=".5"/><stop offset=".45" stop-color="#7a160e" stop-opacity=".22"/><stop offset="1" stop-color="#2a0705" stop-opacity="0"/></radialGradient>
     <radialGradient id="vitre" cx=".5" cy=".5" r=".6"><stop offset="0" stop-color="#ff7a55"/><stop offset=".6" stop-color="#d8301c"/><stop offset="1" stop-color="#8a150c"/></radialGradient>
     <linearGradient id="papier-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a7402f"/><stop offset="1" stop-color="#6e2419"/></linearGradient>
@@ -582,7 +671,7 @@ function decor(P){
   <path d="M375.5 470V560Q375.5 575.5 360 575.5H345" stroke="#7a2a1d" stroke-width="1.2" fill="none" opacity=".8"/>
   <ellipse class="goutte" cx="343" cy="584" rx="1.6" ry="2.4" fill="#ff6a4a" opacity=".55"/>
   <rect width="390" height="844" fill="url(#grain)" opacity=".09"/>
-  <rect width="390" height="844" fill="url(#ombre)"/>`;
+  <rect width="390" height="844" fill="url(#ombre)"/>`).replace(/id="([a-z-]+)"/g,'id="'+pre+'-$1"').replace(/url\(#([a-z-]+)\)/g,'url(#'+pre+'-$1)');
 }
 
 const types={
@@ -636,23 +725,26 @@ const types={
     }
   },
   seuil:{
-    init(P){P.t=0;P.parti=false;P.cible=null;P.clic=false;P.decor=P.el.querySelector('.labo');},
-    enter(P,avant){P.t=0;P.parti=false;P.clic=false;decor(P);P.decor.style.opacity=0;P.decor.style.transform='';if(avant==='sortie')SON.porte(true);},
-    down(P){P.t=Math.max(P.t,SEUIL_LAMPE-.1);},
+    init(P){P.t=0;P.parti=false;P.cible=null;P.clic=false;P.tLampe=0;P.decor=P.el.querySelector('.labo');P.inter=P.el.querySelector('.interrupteur');
+      P.inter.addEventListener('click',()=>{if(planches[cur]===P)allumer(P);});},
+    enter(P,avant){P.t=0;P.parti=false;P.clic=false;P.tLampe=0;decor(P);P.decor.style.opacity=0;P.decor.style.transform='';P.inter.classList.remove('visible','allume');if(avant==='sortie')SON.porte(true);},
+    /* Toucher l'écran, comme toucher l'interrupteur, allume la lampe (une fois l'œil un peu habitué) */
+    down(P){if(P.t>1)allumer(P);},
     tick(P,dt){
       P.t+=dt;
-      /* L'œil s'habitue : on devine des formes ; la lampe s'allume et montre le labo ; on s'approche de la cuvette */
-      const avant=.07*lisse(clamp((P.t-.9)/(SEUIL_LAMPE-.9))),allume=lisse(clamp((P.t-SEUIL_LAMPE)/.35)),va=lisse(clamp((P.t-SEUIL_APPROCHE)/(SEUIL_FIN-SEUIL_APPROCHE)));
+      if(P.t>SEUIL_VOYANT&&!P.clic)P.inter.classList.add('visible');
+      /* L'œil s'habitue : on devine des formes ; la lampe montre le labo ; on s'approche de la cuvette */
+      const avant=.07*lisse(clamp((P.t-.9)/2)),u=P.clic?P.t-P.tLampe:-1;
+      const allume=P.clic?lisse(clamp(u/.35)):0,va=P.clic?lisse(clamp((u-SEUIL_REGARD)/SEUIL_APPROCHE)):0;
       P.decor.style.opacity=(Math.max(avant,allume)*(1-va)).toFixed(3);
-      if(va>0&&!reduit)P.decor.style.transform='scale('+(1+.22*va).toFixed(4)+')';
-      if(P.t>SEUIL_LAMPE&&!P.clic){P.clic=true;SON.interrupteur(true);}
-      if(P.t>=SEUIL_FIN&&!P.parti){
+      if(va>0&&!reduit)P.decor.style.transform='scale('+(1+.06*va).toFixed(4)+')';
+      if(P.clic&&u>=SEUIL_REGARD+SEUIL_APPROCHE&&!P.parti){
         P.parti=true;const c=P.cible!=null?P.cible:cur+1;P.cible=null;montrer(c);
       }
     },
-    lampe(P){return P.t>SEUIL_LAMPE?AMBIANCE:0;},
+    lampe(P){return P.clic?AMBIANCE:0;},
     son(){return [1,0,.8];},
-    consigne(P){return P.t>.8&&P.t<SEUIL_LAMPE?'Laisser l’œil s’habituer au noir':'';}
+    consigne(P){if(P.clic)return '';if(P.t>2.6)return 'Allumer la lampe';return P.t>.8?'Laisser l’œil s’habituer au noir':'';}
   },
   texte:{
     init(P){
@@ -673,7 +765,7 @@ const types={
         SON.developper(P.id,holding);
         if(holding){
           P.prog=Math.min(1,P.prog+dt/DEV_TEXTE);sale=true;
-          if(P.prog>=1){P.dev=true;vus.texte=true;SON.finDev();}
+          if(P.prog>=1){P.dev=true;vus.texte=true;SON.finDev();if(P.apres.length)SON.platine.relever(true);}
         }
       }
       else if(P.blanc<1){P.blanc=Math.min(1,P.blanc+dt/FIXAGE);sale=true;}
@@ -741,25 +833,69 @@ const types={
     }
   },
   sortie:{
-    init(P){P.porte=P.el.querySelector('.porte');P.dehors=P.el.querySelector('.dehors');P.t=0;P.ouverte=false;P.direct=false;P.decal=0;},
-    /* Avec le son, on rince d'abord les tirages (P.decal secondes) avant d'éteindre et d'ouvrir */
+    init(P){P.porte=P.el.querySelector('.porte');P.dehors=P.el.querySelector('.dehors');P.decor=P.el.querySelector('.labo');P.t=0;P.etape='dehors';P.direct=false;P.garder=false;P.tPorte=0;P.rince=0;
+      P.dehors.addEventListener('scroll',()=>stage.classList.toggle('defile',P.dehors.scrollTop>24),{passive:true});},
     enter(P){
-      fermerVis();construireGrille();P.dehors.scrollTop=0;
-      if(P.direct){P.direct=false;P.ouverte=true;P.porte.style.clipPath='none';P.dehors.classList.add('visible');}
-      else{P.ouverte=false;P.t=0;P.porte.style.clipPath='inset(0 50% 0 50%)';P.dehors.classList.remove('visible');P.decal=SON.sortir()||0;}
+      fermerVis();construireGrille();P.dehors.scrollTop=0;stage.classList.remove('defile');P.garder=false;
+      if(P.direct){P.direct=false;P.etape='dehors';P.porte.style.clipPath='none';P.decor.style.opacity=0;P.dehors.classList.add('visible');}
+      else{P.etape='rincer';P.t=0;decor(P);P.decor.style.opacity=1;P.porte.style.clipPath='inset(0 50% 0 50%)';P.dehors.classList.remove('visible');}
+    },
+    /* Premier geste : ouvrir le robinet ; second geste : pousser la porte */
+    down(P){
+      if(P.etape==='rincer'){P.etape='rince';P.t=0;P.rince=SON.rincer()||1.2;}
+      else if(P.etape==='porte'){P.etape='ouvre';P.t=0;SON.pousser();}
     },
     tick(P,dt){
-      if(P.ouverte)return;
+      if(P.etape==='dehors')return;
       P.t+=dt;
-      const a=clamp((P.t-P.decal-1.4)/(reduit?.3:2.6)),m=(50-50*lisse(a)).toFixed(2);
-      P.porte.style.clipPath=a>=1?'none':'inset(0 '+m+'% 0 '+m+'%)';
-      if(a>=1){P.ouverte=true;P.dehors.classList.add('visible');requestAnimationFrame(echelle);}
+      if(P.etape==='rince'&&P.t>=P.rince){P.etape='porte';P.t=0;}
+      if(P.etape==='ouvre'){
+        P.decor.style.opacity=(1-lisse(clamp(P.t/.35))).toFixed(3);
+        const a=clamp((P.t-1)/(reduit?.3:2.6)),m=(50-50*lisse(a)).toFixed(2);
+        P.porte.style.clipPath=a>=1?'none':'inset(0 '+m+'% 0 '+m+'%)';
+        if(a>=1){P.etape='dehors';P.dehors.classList.add('visible');requestAnimationFrame(echelle);}
+      }
     },
-    lampe(P){return !P.ouverte&&P.t<P.decal+.35?AMBIANCE:0;},
-    son(P){return [0,P.ouverte||P.t>P.decal+1.8?1:0,.9];},
+    lampe(P){return P.etape==='rincer'||P.etape==='rince'||P.etape==='porte'||(P.etape==='ouvre'&&P.t<.1)?AMBIANCE:0;},
+    son(P){return P.etape==='dehors'||(P.etape==='ouvre'&&P.t>1.4)?[0,1,.9]:[1,0,.8];},
+    consigne(P){return P.etape==='rincer'?'Ouvrir le robinet pour rincer les tirages':P.etape==='porte'?'Pousser la porte':'';},
     glisse(P,dx){if(vis.ouverte)visNav(dx<0?1:-1);}
   }
 };
+
+/* Le tourne-disque : dans le noir, on ne voit que son voyant ; le toucher ouvre ses commandes */
+const voyantPl=$('platine'),panPl=$('platine-commandes');
+let plOuvert=false,plMinuterie=0;
+function majPlatine(){
+  const e=SON.platine.etat();
+  voyantPl.classList.toggle('joue',!!e.joue);
+  if(!plOuvert)return;
+  $('pl-faces').innerHTML='';
+  e.faces.forEach((f,k)=>{
+    if(k)$('pl-faces').append(' · ');
+    const b=document.createElement('button');b.type='button';b.textContent=f.titre.replace(/^Face/,'face');b.className='pl-face'+(f.cle===e.face?' choisie':'');
+    b.setAttribute('aria-pressed',f.cle===e.face?'true':'false');
+    b.addEventListener('click',()=>{SON.platine.retourner(f.cle);majPlatine();garderPl();});
+    $('pl-faces').append(b);
+  });
+  $('pl-piste').textContent=e.joue?(e.fin?'Le dernier sillon':(e.piste+1)+'. '+e.titre+' — '+e.auteur):'';
+  $('pl-poser').hidden=!!e.joue;$('pl-suiv').hidden=!e.joue;$('pl-lever').hidden=!e.joue;
+}
+function garderPl(){clearTimeout(plMinuterie);plMinuterie=setTimeout(fermerPl,9000);}
+function ouvrirPl(){if(!SON.platine.pret())return;plOuvert=true;panPl.hidden=false;majPlatine();garderPl();}
+function fermerPl(){plOuvert=false;panPl.hidden=true;clearTimeout(plMinuterie);}
+voyantPl.addEventListener('click',()=>{plOuvert?fermerPl():ouvrirPl();});
+$('pl-poser').addEventListener('click',()=>{SON.debloquer();SON.platine.poser();majPlatine();garderPl();});
+$('pl-suiv').addEventListener('click',()=>{SON.platine.suivante();majPlatine();garderPl();});
+$('pl-lever').addEventListener('click',()=>{SON.platine.relever();majPlatine();garderPl();});
+
+/* Le lecteur allume la lampe rouge du labo */
+function allumer(P){
+  if(P.clic)return;
+  P.clic=true;P.tLampe=P.t;SON.interrupteur(true);P.inter.classList.add('allume');
+}
+/* Sortir à tout moment : on garde la planche où l'on était, pour y revenir */
+function sortirMaintenant(){const s=planches.length-1;planches[s].garder=true;montrer(s);}
 
 /* Un poème fixé part sécher (pas les dessins, révélés à la lampe, ni XVII, qui reste dans son silence) */
 function fixer(P){P.fixe=true;majNav();if(estTirage(P)){sauver();if(P.kind==='texte'&&!P.apres.length)SON.secher();}}
@@ -771,12 +907,12 @@ function majNav(){
 }
 function montrer(n){
   const A=planches[cur],avant=A.kind;A.el.classList.remove('active');types[A.kind].up&&types[A.kind].up(A);holding=false;
-  SON.calme();
+  SON.calme();fermerPl();
   if(A.kind==='dessin'&&n!==cur)liberer(A);
   cur=n;const P=planches[cur];P.el.classList.add('active');stage.dataset.kind=P.kind;
   prevoir(cur);
   /* La planche où l'on s'arrête est gardée ; sortir par la porte au bout du livre l'oublie */
-  if(estTirage(P))sauverPos(P.id);else if(P.kind==='sortie'&&!P.direct)sauverPos(null);
+  if(estTirage(P))sauverPos(P.id);else if(P.kind==='sortie'&&!P.direct&&!P.garder)sauverPos(null);
   types[P.kind].enter&&types[P.kind].enter(P,avant);
   idle=0;majNav();
 }
@@ -822,7 +958,8 @@ function finir(id){
   }
 }
 stage.addEventListener('pointerdown',e=>{
-  if(e.target.closest('button'))return;
+  if(e.target.closest('button,#platine-commandes'))return;
+  if(plOuvert){fermerPl();return;}
   if(!e.target.closest('.dehors')){try{stage.setPointerCapture(e.pointerId);}catch(_){}}
   debut(e.pointerId,e.clientX,e.clientY,e.pointerType!=='mouse');
 });
@@ -857,6 +994,7 @@ addEventListener('keydown',e=>{
 });
 addEventListener('keyup',e=>{if(e.key===' '||e.key==='Enter'){holding=false;planches[cur].clavier=false;}});
 btnS.addEventListener('click',suivant);
+$('sortir').addEventListener('click',sortirMaintenant);
 btnP.addEventListener('click',precedent);
 revoir.addEventListener('click',()=>{const s=planches.length-1;planches[s].direct=true;montrer(s);});
 $('rentrer').addEventListener('click',()=>rentrer());
@@ -892,7 +1030,7 @@ majNav();
 /* Les polices arrivées, les poèmes longs se réajustent */
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{planches.forEach(P=>{P.ajuste=null;});const P=planches[cur];if(P.kind==='texte')ajuster(P);});
 
-let tPrec=performance.now(),dernier=null,lampeV=-1;
+let tPrec=performance.now(),dernier=null,lampeV=-1,tourPl=0;
 function boucle(t){
   const dt=Math.min(.1,(t-tPrec)/1000);tPrec=t;
   const P=planches[cur],T=types[P.kind];
@@ -903,6 +1041,7 @@ function boucle(t){
   if(l!==lampeV){lampeV=l;lampe.style.opacity=l;}
   const s=U.son?U.son(Q):SILENCE;
   SON.scene(s[0],s[1],s[2],s[3]);SON.tick();
+  if((++tourPl)%20===0)majPlatine();
   const c=U.consigne?U.consigne(Q):'';
   if(c!==dernier){dernier=c;if(c){consigne.textContent=c;consigne.style.opacity=1;}else consigne.style.opacity=0;}
   requestAnimationFrame(boucle);

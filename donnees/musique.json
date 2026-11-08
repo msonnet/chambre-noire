@@ -1,0 +1,18 @@
+{
+ "a": {"titre": "Face A", "pistes": [
+  {"source": "ch_p04.mp3", "titre": "Prélude op. 28 n° 4, en mi mineur", "auteur": "Chopin", "interprete": "Musopen", "licence": "CC0", "origine": "Musopen, The Complete Works of Frédéric Chopin (Internet Archive)"},
+  {"source": "fma_RachmaninovMorceaudeFantaisieE.flac", "titre": "Élégie, op. 3 n° 1", "auteur": "Rachmaninov", "interprete": "Jaan Patterson", "licence": "CC0", "origine": "Free Music Archive"},
+  {"source": "ch_n49.mp3", "titre": "Nocturne en ut dièse mineur, posthume", "auteur": "Chopin", "interprete": "Musopen", "licence": "CC0", "origine": "Musopen"},
+  {"source": "fma_GnossiennesNo1.flac", "titre": "Gnossienne n° 1", "auteur": "Satie", "interprete": "Jaan Patterson", "licence": "CC0", "origine": "Free Music Archive"},
+  {"source": "ch_p15.mp3", "titre": "Prélude op. 28 n° 15, « La goutte d'eau »", "auteur": "Chopin", "interprete": "Musopen", "licence": "CC0", "origine": "Musopen"},
+  {"source": "ch_n48.mp3", "titre": "Nocturne en ut mineur, op. 48 n° 1", "auteur": "Chopin", "interprete": "Musopen", "licence": "CC0", "origine": "Musopen"},
+  {"source": "ch_p20.mp3", "titre": "Prélude op. 28 n° 20, en ut mineur", "auteur": "Chopin", "interprete": "Musopen", "licence": "CC0", "origine": "Musopen"}
+ ]},
+ "b": {"titre": "Face B", "pistes": [
+  {"source": "ch_mf.mp3", "titre": "Marche funèbre (Sonate n° 2, III)", "auteur": "Chopin", "interprete": "Musopen", "licence": "CC0", "origine": "Musopen"},
+  {"source": "ch_e06.mp3", "titre": "Étude op. 10 n° 6, en mi bémol mineur", "auteur": "Chopin", "interprete": "Musopen", "licence": "CC0", "origine": "Musopen"},
+  {"source": "ch_p06.mp3", "titre": "Prélude op. 28 n° 6, en si mineur", "auteur": "Chopin", "interprete": "Musopen", "licence": "CC0", "origine": "Musopen"},
+  {"source": "ch_n72.mp3", "titre": "Nocturne en mi mineur, op. 72 n° 1", "auteur": "Chopin", "interprete": "Musopen", "licence": "CC0", "origine": "Musopen"},
+  {"source": "ch_n27.mp3", "titre": "Nocturne en ut dièse mineur, op. 27 n° 1", "auteur": "Chopin", "interprete": "Musopen", "licence": "CC0", "origine": "Musopen"}
+ ]}
+}

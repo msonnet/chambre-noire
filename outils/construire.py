@@ -53,6 +53,18 @@ EPI = '''<section class="planche" data-kind="texte" data-id="epi" aria-label="É
 </div>
 </section>'''
 
+def credits_musique():
+    """Les crédits du tourne-disque, d'après donnees/musique.json."""
+    f = RACINE / 'donnees/musique.json'
+    if not f.exists():
+        return ''
+    morceaux = []
+    for face in json.load(open(f)).values():
+        for p in face['pistes']:
+            qui = p['auteur'] + (f", {p['interprete']}" if p.get('interprete') else '')
+            morceaux.append(f"{p['titre']} ({qui}, {p['licence']})")
+    return '<p>Tourne-disque&nbsp;: ' + html.escape(' ; '.join(morceaux), quote=False) + '. Enregistrements de Musopen et de Free Music Archive.</p>'
+
 def construire():
     poemes = {p['id']: p for p in json.load(open(RACINE / 'donnees/poemes.json'))}
     blocs = []
@@ -65,7 +77,7 @@ def construire():
             pid, _, n = cle.partition('-')
             blocs.append(planche_poeme(poemes[pid], int(n) - 1 if n else 0))
     gabarit = (RACINE / 'outils/gabarit.html').read_text()
-    page = gabarit.replace('<!--PLANCHES-->', '\n\n'.join(blocs))
+    page = gabarit.replace('<!--PLANCHES-->', '\n\n'.join(blocs)).replace('<!--MUSIQUE-->', credits_musique())
     (PUB / 'index.html').write_text(page)
     n_poemes = sum(1 for c in ORDRE if not c.startswith('d') and c != 'epi' and '-' not in c)
     n_dessins = sum(1 for c in ORDRE if c.startswith('d'))
@@ -74,8 +86,10 @@ def construire():
 
 def maj_cache():
     """Liste de tous les fichiers du livre pour le hors-ligne, et une version qui change avec leur contenu."""
+    # Tout le livre est gardé hors ligne, sauf les disques du tourne-disque (lus sur le réseau, trop lourds)
     fichiers = sorted(str(p.relative_to(PUB)) for p in PUB.rglob('*')
-                      if p.is_file() and p.name not in ('sw.js', 'robots.txt') and not p.name.endswith('.txt'))
+                      if p.is_file() and p.name not in ('sw.js', 'robots.txt') and not p.name.endswith('.txt')
+                      and not (p.suffix == '.mp3' and p.parent.parent.name == 'musique'))
     h = hashlib.sha256()
     for f in fichiers:
         h.update(f.encode()); h.update((PUB / f).read_bytes())

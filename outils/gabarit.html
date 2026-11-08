@@ -39,11 +39,13 @@
 
 <section class="planche" data-kind="seuil" aria-label="Entrée dans la chambre noire">
 <svg class="labo" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice" aria-hidden="true"></svg>
+<button class="interrupteur" type="button" aria-label="Allumer la lampe rouge"><span></span></button>
 </section>
 
 <!--PLANCHES-->
 
 <section class="planche" data-kind="sortie" aria-label="Sortie de la chambre noire">
+<svg class="labo" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice" aria-hidden="true"></svg>
 <div class="porte" aria-hidden="true"></div>
 <div class="dehors">
 <div class="dehors-page">
@@ -57,6 +59,7 @@
 <div class="mentions">
 <p>Chambre noire, poèmes et dessins © Nathan Sonnet, 2025.</p>
 <p>Sons&nbsp;: enregistrements de Freesound.org. Ventilation&nbsp;: silencyo (CC BY 3.0). Obturateur, pas, coups, portes, interrupteur, eau, papier, pinces, robinet et vent&nbsp;: cabled_mess, colo777, carroll27, LampEight, Kinoton, toddcircle, odilonmarcenar, Nox_Sound, haulaway, matieke, Pipelenisf, leonseptavaux, ValentinPetite, Joao_Janz, felix.blume (domaine public, CC0). Police&nbsp;: Lora (SIL Open Font License).</p>
+<!--MUSIQUE-->
 </div>
 </div>
 </div>
@@ -72,6 +75,14 @@
 <button class="nav" id="prec" type="button" aria-label="Planche précédente">‹</button>
 <button class="nav" id="suiv" type="button" aria-label="Planche suivante">›</button>
 <button id="son" type="button" aria-label="Son" aria-pressed="true">avec le son</button>
+<button id="sortir" type="button" aria-label="Sortir de la chambre noire">sortir</button>
+<button id="platine" type="button" aria-label="Le tourne-disque"><span></span></button>
+<div id="platine-commandes" hidden>
+<p class="pl-nom">Tourne-disque</p>
+<p id="pl-faces"></p>
+<p id="pl-piste"></p>
+<p class="pl-gestes"><button type="button" id="pl-poser">poser l’aiguille</button><button type="button" id="pl-suiv" hidden>piste suivante</button><button type="button" id="pl-lever" hidden>relever l’aiguille</button></p>
+</div>
 <noscript><p>Ce livre se développe du doigt&nbsp;: il a besoin de JavaScript.</p></noscript>
 </main>
 

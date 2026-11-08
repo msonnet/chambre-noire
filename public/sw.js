@@ -1,6 +1,6 @@
 /* Chambre noire hors ligne : tout le livre est gardé sur le téléphone.
    Fichier produit par outils/construire.py ; la version change dès qu'un fichier du livre change. */
-const VERSION='chambre-noire-b28d5b4619';
+const VERSION='chambre-noire-7258be013b';
 const FICHIERS=[
   "icones/apple-touch-icon.png",
   "icones/icone-192.png",
@@ -51,11 +51,14 @@ const FICHIERS=[
   "./",
   "livre.js",
   "manifest.webmanifest",
+  "musique/disques.json",
   "polices/lora-latin-400-italic.woff2",
   "polices/lora-latin-400-normal.woff2",
   "polices/lora-latin-600-normal.woff2",
   "sons/bain.mp3",
+  "sons/batiment.mp3",
   "sons/coups.mp3",
+  "sons/craquement.mp3",
   "sons/dehors.mp3",
   "sons/feuilles.mp3",
   "sons/gouttes.mp3",
@@ -65,8 +68,11 @@ const FICHIERS=[
   "sons/papier.mp3",
   "sons/pas.mp3",
   "sons/pince.mp3",
+  "sons/pincettes.mp3",
+  "sons/platine.mp3",
   "sons/portes.mp3",
   "sons/rincage.mp3",
+  "sons/sillon.mp3",
   "sons/ventilation.mp3",
   "style.css"
 ];

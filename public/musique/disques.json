@@ -1,0 +1,120 @@
+{
+ "a": {
+  "titre": "Face A",
+  "pistes": [
+   {
+    "titre": "Prélude op. 28 n° 4, en mi mineur",
+    "auteur": "Chopin",
+    "interprete": "Musopen",
+    "licence": "CC0",
+    "origine": "Musopen, The Complete Works of Frédéric Chopin (Internet Archive)",
+    "fichier": "musique/a/01.mp3",
+    "duree": 113.2
+   },
+   {
+    "titre": "Élégie, op. 3 n° 1",
+    "auteur": "Rachmaninov",
+    "interprete": "Jaan Patterson",
+    "licence": "CC0",
+    "origine": "Free Music Archive",
+    "fichier": "musique/a/02.mp3",
+    "duree": 222.2
+   },
+   {
+    "titre": "Nocturne en ut dièse mineur, posthume",
+    "auteur": "Chopin",
+    "interprete": "Musopen",
+    "licence": "CC0",
+    "origine": "Musopen",
+    "fichier": "musique/a/03.mp3",
+    "duree": 223.2
+   },
+   {
+    "titre": "Gnossienne n° 1",
+    "auteur": "Satie",
+    "interprete": "Jaan Patterson",
+    "licence": "CC0",
+    "origine": "Free Music Archive",
+    "fichier": "musique/a/04.mp3",
+    "duree": 254.8
+   },
+   {
+    "titre": "Prélude op. 28 n° 15, « La goutte d'eau »",
+    "auteur": "Chopin",
+    "interprete": "Musopen",
+    "licence": "CC0",
+    "origine": "Musopen",
+    "fichier": "musique/a/05.mp3",
+    "duree": 314.3
+   },
+   {
+    "titre": "Nocturne en ut mineur, op. 48 n° 1",
+    "auteur": "Chopin",
+    "interprete": "Musopen",
+    "licence": "CC0",
+    "origine": "Musopen",
+    "fichier": "musique/a/06.mp3",
+    "duree": 368.4
+   },
+   {
+    "titre": "Prélude op. 28 n° 20, en ut mineur",
+    "auteur": "Chopin",
+    "interprete": "Musopen",
+    "licence": "CC0",
+    "origine": "Musopen",
+    "fichier": "musique/a/07.mp3",
+    "duree": 104.1
+   }
+  ]
+ },
+ "b": {
+  "titre": "Face B",
+  "pistes": [
+   {
+    "titre": "Marche funèbre (Sonate n° 2, III)",
+    "auteur": "Chopin",
+    "interprete": "Musopen",
+    "licence": "CC0",
+    "origine": "Musopen",
+    "fichier": "musique/b/01.mp3",
+    "duree": 546.6
+   },
+   {
+    "titre": "Étude op. 10 n° 6, en mi bémol mineur",
+    "auteur": "Chopin",
+    "interprete": "Musopen",
+    "licence": "CC0",
+    "origine": "Musopen",
+    "fichier": "musique/b/02.mp3",
+    "duree": 246.7
+   },
+   {
+    "titre": "Prélude op. 28 n° 6, en si mineur",
+    "auteur": "Chopin",
+    "interprete": "Musopen",
+    "licence": "CC0",
+    "origine": "Musopen",
+    "fichier": "musique/b/03.mp3",
+    "duree": 117.8
+   },
+   {
+    "titre": "Nocturne en mi mineur, op. 72 n° 1",
+    "auteur": "Chopin",
+    "interprete": "Musopen",
+    "licence": "CC0",
+    "origine": "Musopen",
+    "fichier": "musique/b/04.mp3",
+    "duree": 270.9
+   },
+   {
+    "titre": "Nocturne en ut dièse mineur, op. 27 n° 1",
+    "auteur": "Chopin",
+    "interprete": "Musopen",
+    "licence": "CC0",
+    "origine": "Musopen",
+    "fichier": "musique/b/05.mp3",
+    "duree": 346.9
+   }
+  ]
+ }
+}
