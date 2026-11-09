@@ -126,7 +126,10 @@ function creerSon(){
   }
   /* Le tourne-disque : un disque à deux faces (musique/disques.json), lu par un élément audio qui passe par le labo
      (un petit haut-parleur, les craquements du vinyle) ; à la fin de la face, l'aiguille tourne dans le dernier sillon. */
-  const PL={disques:null,face:'a',piste:0,joue:false,arret:false,fin:false,el:null,craq:null,sillon:null,charge:null,blobs:{},enCours:{},dispo:false};
+  const PL={disques:null,face:'a',piste:0,joue:false,arret:false,fin:false,el:null,g:null,craq:null,sillon:null,charge:null,blobs:{},enCours:{},dispo:false,amorce:false,tPose:0,pose:false};
+  /* Le bras met BRAS secondes à venir au-dessus du disque (transition de .labo .bras dans style.css) : l'aiguille se pose
+     alors, on l'entend toucher le sillon, les craquements commencent, puis la musique (après le blanc du début du morceau) */
+  const BRAS=1.55;
   try{const f=localStorage.getItem('chambre-noire-face');if(f)PL.face=f;}catch(_){}
   fetch('musique/disques.json').then(r=>r.ok?r.json():null).then(d=>{PL.disques=d;if(d&&!d[PL.face])PL.face=Object.keys(d)[0];if(d){plPrecharger(PL.face,PL.piste);plVerifier();}}).catch(()=>{});
   /* Les morceaux sont lus depuis la copie gardée sur le téléphone (ou le réseau), chargés à l'avance en entier :
@@ -156,7 +159,7 @@ function creerSon(){
     const el=new Audio();el.preload='auto';PL.el=el;
     try{
       const s=ctx.createMediaElementSource(el),hp=ctx.createBiquadFilter(),lp=ctx.createBiquadFilter(),g=ctx.createGain();
-      hp.type='highpass';hp.frequency.value=110;lp.type='lowpass';lp.frequency.value=5200;lp.Q.value=.4;g.gain.value=VOL.musique;
+      hp.type='highpass';hp.frequency.value=110;lp.type='lowpass';lp.frequency.value=5200;lp.Q.value=.4;g.gain.value=VOL.musique;PL.g=g;
       s.connect(hp);hp.connect(lp);lp.connect(g);g.connect(bus.labo);
     }catch(e){erreurs.push('platine : '+(e&&e.message||e));}
     el.addEventListener('ended',()=>{
@@ -182,6 +185,29 @@ function creerSon(){
     const n=PL.disques[PL.face].pistes.length;plPrecharger(PL.face,(PL.piste+1)%n);
   }
   function plJouer(){const pr=PL.el.play();if(pr&&pr.catch)pr.catch(e=>erreurs.push('platine : '+(e&&e.message||e)));}
+  /* Le téléphone ne laisse jouer un son qu'au toucher : au premier toucher, on fait démarrer l'élément audio en silence et on
+     l'arrête aussitôt ; il pourra ensuite jouer seul, quand l'aiguille se posera */
+  function plAmorcer(){
+    if(PL.amorce||!PL.el||!PL.el.src)return;
+    if(PL.g)PL.g.gain.value=0;
+    const pr=PL.el.play();
+    const fin=()=>{PL.amorce=true;if(!PL.pose){try{PL.el.pause();PL.el.currentTime=0;}catch(_){}}if(PL.g)PL.g.gain.value=VOL.musique;};
+    if(pr&&pr.then)pr.then(fin,()=>{if(PL.g)PL.g.gain.value=VOL.musique;});else fin();
+  }
+  /* Poser l'aiguille dans `delai` secondes (le temps que le bras arrive), puis jouer depuis le début du morceau ou là où on l'avait relevée */
+  function plPoser(delai,reprise){
+    clearTimeout(PL.tPose);PL.pose=false;
+    PL.tPose=setTimeout(()=>{
+      if(!PL.joue)return;
+      PL.pose=true;aiguille(true);
+      if(PL.fin){plBoucle('sillon',true);return;}
+      plBoucle('craq',true);
+      if(PL.g)PL.g.gain.value=VOL.musique;
+      if(reprise)plJouer();
+      else if(PL.el.src){try{PL.el.currentTime=0;}catch(_){}plJouer();}
+      else plCharger(true);
+    },delai*1000);
+  }
   function aiguille(descend,auto){
     if(!vivant())return;
     if(descend)jouer('platine',pioche('platine')%2,{gain:VOL.platine,bus:'labo',pan:.25});
@@ -195,17 +221,17 @@ function creerSon(){
     lire(){
       if(!PL.disques||PL.joue||!vivant())return;
       plChaine();if(!PL.el)return;
-      PL.joue=true;aiguille(true);
-      if(PL.fin){plBoucle('sillon',true);return;}
-      plBoucle('craq',true);
-      if(PL.arret&&PL.charge===PL.face+PL.piste)plJouer();else plCharger(true);
-      PL.arret=false;
+      PL.joue=true;
+      const reprise=PL.arret&&PL.charge===PL.face+PL.piste;
+      if(!reprise&&!PL.fin)plCharger(false);
+      plAmorcer();PL.arret=false;
+      plPoser(BRAS,reprise);
     },
     /* Pause : relever l'aiguille (le morceau garde sa place) */
     pause(auto){
       if(!PL.joue)return;
-      PL.joue=false;PL.arret=true;try{PL.el.pause();}catch(_){}
-      plBoucle('craq',false);plBoucle('sillon',false);aiguille(false,auto);
+      PL.joue=false;PL.arret=true;clearTimeout(PL.tPose);try{PL.el.pause();}catch(_){}
+      plBoucle('craq',false);plBoucle('sillon',false);if(PL.pose)aiguille(false,auto);PL.pose=false;
     },
     /* Changer de morceau : le suivant sur la face (après le dernier, on revient au premier) */
     suivante(){
@@ -213,21 +239,23 @@ function creerSon(){
       plChaine();if(!PL.el)return;
       const n=PL.disques[PL.face].pistes.length;
       PL.piste=PL.fin?0:(PL.piste+1)%n;PL.fin=false;PL.arret=false;plBoucle('sillon',false);
-      if(PL.joue)aiguille(false);
-      PL.joue=true;setTimeout(()=>aiguille(true),300);plBoucle('craq',true);plCharger(true);
+      /* L'aiguille se relève, va au morceau suivant et se repose ; si le bras était au repos, il vient d'abord au-dessus du disque */
+      const dessus=PL.joue;try{PL.el.pause();}catch(_){}plBoucle('craq',false);
+      if(dessus&&PL.pose)aiguille(false);
+      PL.joue=true;plCharger(false);plAmorcer();plPoser(dessus?.7:BRAS,false);
     },
     /* L'autre face : on retourne le disque et l'on pose l'aiguille au début */
     autreFace(){
       if(!PL.disques||!vivant())return;
       plChaine();if(!PL.el)return;
       const faces=Object.keys(PL.disques),f=faces[(faces.indexOf(PL.face)+1)%faces.length];
-      if(PL.joue){PL.joue=false;try{PL.el.pause();}catch(_){}plBoucle('craq',false);plBoucle('sillon',false);aiguille(false);}
+      if(PL.joue){PL.joue=false;clearTimeout(PL.tPose);try{PL.el.pause();}catch(_){}plBoucle('craq',false);plBoucle('sillon',false);if(PL.pose)aiguille(false);PL.pose=false;}
       PL.face=f;PL.piste=0;PL.fin=false;PL.arret=false;try{localStorage.setItem('chambre-noire-face',f);}catch(_){}
       jouer('feuilles',pioche('feuilles'),{t:ctx.currentTime+.3,gain:VOL.feuille,bus:'labo'});
-      PL.joue=true;setTimeout(()=>aiguille(true),1300);plBoucle('craq',true);plCharger(true);
+      PL.joue=true;plCharger(false);plAmorcer();plPoser(Math.max(BRAS,1.3),false);
     },
     /* L'onglet caché : le disque s'arrête de tourner avec lui */
-    visible(on){if(PL.el&&PL.joue&&!PL.fin){try{on?plJouer():PL.el.pause();}catch(_){}}}
+    visible(on){if(PL.el&&PL.joue&&PL.pose&&!PL.fin){try{on?plJouer():PL.el.pause();}catch(_){}}}
   };
   document.addEventListener('visibilitychange',()=>platine.visible(!document.hidden));
   Object.keys(platine).forEach(k=>{const f=platine[k];platine[k]=function(){try{return f.apply(platine,arguments);}catch(e){erreurs.push('platine '+k+' : '+(e&&e.message||e));return null;}};});
@@ -1034,7 +1062,7 @@ function repondre(P,oui){
   if(!P.question)return;
   P.question=false;questionEl.hidden=true;
   if(oui){SON.debloquer();SON.platine.lire();majPlatine();}else refusDisque=true;
-  P.depart=P.t+(oui?2.8:.5);
+  P.depart=P.t+(oui?3.6:.5);
 }
 $('qd-oui').addEventListener('click',()=>{const P=planches[cur];if(P.kind==='seuil')repondre(P,true);});
 $('qd-non').addEventListener('click',()=>{const P=planches[cur];if(P.kind==='seuil')repondre(P,false);});
