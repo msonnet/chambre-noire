@@ -129,7 +129,10 @@ function creerSon(){
   const PL={disques:null,face:'a',piste:0,joue:false,arret:false,fin:false,el:null,g:null,craq:null,sillon:null,charge:null,blobs:{},enCours:{},dispo:false,amorce:false,tPose:0,pose:false};
   /* Le bras met BRAS secondes à venir au-dessus du disque (transition de .labo .bras dans style.css) : l'aiguille se pose
      alors, on l'entend toucher le sillon, les craquements commencent, puis la musique (après le blanc du début du morceau) */
-  const BRAS=1.55;
+  const BRAS=1.75;
+  /* Une fois l'aiguille posée, le sillon d'entrée craque un moment avant le morceau (ENTREE secondes, plus le blanc du début
+     du fichier) ; entre deux morceaux, le blanc est plus court ; après une pause, la musique reprend presque aussitôt */
+  const ENTREE=1.1,ENTRE_DEUX=.5,REPRISE=.25;
   try{const f=localStorage.getItem('chambre-noire-face');if(f)PL.face=f;}catch(_){}
   fetch('musique/disques.json').then(r=>r.ok?r.json():null).then(d=>{PL.disques=d;if(d&&!d[PL.face])PL.face=Object.keys(d)[0];if(d){plPrecharger(PL.face,PL.piste);plVerifier();}}).catch(()=>{});
   /* Les morceaux sont lus depuis la copie gardée sur le téléphone (ou le réseau), chargés à l'avance en entier :
@@ -195,17 +198,21 @@ function creerSon(){
     if(pr&&pr.then)pr.then(fin,()=>{if(PL.g)PL.g.gain.value=VOL.musique;});else fin();
   }
   /* Poser l'aiguille dans `delai` secondes (le temps que le bras arrive), puis jouer depuis le début du morceau ou là où on l'avait relevée */
-  function plPoser(delai,reprise){
+  function plPoser(delai,reprise,blanc){
     clearTimeout(PL.tPose);PL.pose=false;
     PL.tPose=setTimeout(()=>{
       if(!PL.joue)return;
       PL.pose=true;aiguille(true);
       if(PL.fin){plBoucle('sillon',true);return;}
       plBoucle('craq',true);
-      if(PL.g)PL.g.gain.value=VOL.musique;
-      if(reprise)plJouer();
-      else if(PL.el.src){try{PL.el.currentTime=0;}catch(_){}plJouer();}
-      else plCharger(true);
+      /* l'aiguille court dans le sillon, puis le morceau */
+      PL.tPose=setTimeout(()=>{
+        if(!PL.joue)return;
+        if(PL.g)PL.g.gain.value=VOL.musique;
+        if(reprise)plJouer();
+        else if(PL.el.src){try{PL.el.currentTime=0;}catch(_){}plJouer();}
+        else plCharger(true);
+      },(blanc!=null?blanc:reprise?REPRISE:ENTREE)*1000);
     },delai*1000);
   }
   function aiguille(descend,auto){
@@ -242,7 +249,7 @@ function creerSon(){
       /* L'aiguille se relève, va au morceau suivant et se repose ; si le bras était au repos, il vient d'abord au-dessus du disque */
       const dessus=PL.joue;try{PL.el.pause();}catch(_){}plBoucle('craq',false);
       if(dessus&&PL.pose)aiguille(false);
-      PL.joue=true;plCharger(false);plAmorcer();plPoser(dessus?.7:BRAS,false);
+      PL.joue=true;plCharger(false);plAmorcer();plPoser(dessus?.7:BRAS,false,dessus?ENTRE_DEUX:ENTREE);
     },
     /* L'autre face : on retourne le disque et l'on pose l'aiguille au début */
     autreFace(){
@@ -403,7 +410,7 @@ const SILENCE_XVII=2,APPARITION_XVII=1.5;
    le lecteur allume lui-même la lampe rouge et voit le labo : la lampe, la corde à linge où sèchent ses tirages,
    les cuvettes sur la paillasse, l'agrandisseur. SEUIL_REGARD secondes après l'allumage, on s'approche de la cuvette,
    en SEUIL_APPROCHE secondes */
-const SEUIL_VOYANT=reduit?.5:4.2,SEUIL_REGARD=reduit?1.2:3.4,SEUIL_APPROCHE=reduit?.6:1.6;
+const SEUIL_VOYANT=reduit?.5:4.2,SEUIL_REGARD=reduit?1.2:3.4,SEUIL_APPROCHE=reduit?.6:3.2;
 /* « Laisser l'œil s'habituer au noir » jusqu'à SEUIL_OEIL ; un temps de noir ; puis « Allumer la lampe » à SEUIL_ALLUMER */
 const SEUIL_OEIL=reduit?2.2:5.6,SEUIL_ALLUMER=reduit?3.2:7;
 /* Taille minimale des vers quand un poème doit se resserrer pour tenir sur l'écran (en pixels) */
@@ -1088,7 +1095,7 @@ function repondre(P,oui){
   if(!P.question)return;
   P.question=false;questionEl.hidden=true;
   if(oui){SON.debloquer();SON.platine.lire();majPlatine();}else refusDisque=true;
-  P.depart=P.t+(oui?3.6:.5);
+  P.depart=P.t+(oui?4.6:.5);
 }
 $('qd-oui').addEventListener('click',()=>{const P=planches[cur];if(P.kind==='seuil')repondre(P,true);});
 $('qd-non').addEventListener('click',()=>{const P=planches[cur];if(P.kind==='seuil')repondre(P,false);});
@@ -1114,6 +1121,8 @@ function montrer(n){
   SON.calme();fermerPl();questionEl.hidden=true;
   if(A.kind==='dessin'&&n!==cur)liberer(A);
   cur=n;const P=planches[cur];P.el.classList.add('active');stage.dataset.kind=P.kind;
+  /* En venant du seuil, la cuvette sort lentement du noir */
+  P.el.classList.remove('arrivee');if(avant==='seuil'&&!reduit){void P.el.offsetWidth;P.el.classList.add('arrivee');}
   prevoir(cur);
   /* La planche où l'on s'arrête est gardée ; sortir par la porte au bout du livre l'oublie */
   if(estTirage(P))sauverPos(P.id);else if(P.kind==='sortie'&&!P.direct&&!P.garder)sauverPos(null);

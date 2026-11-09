@@ -28,6 +28,8 @@ body{position:fixed;inset:0}
 #lampe{position:absolute;inset:0;pointer-events:none;background:radial-gradient(130% 55% at 50% -12%,var(--lampe),transparent 62%);opacity:0;transition:opacity 1.4s ease;z-index:0}
 .planche{position:absolute;inset:0;display:none;z-index:1}
 .planche.active{display:block}
+.planche.arrivee{animation:arrivee 2.2s ease-in both}
+@keyframes arrivee{from{opacity:0}to{opacity:1}}
 .page{position:relative;height:100%;max-width:30rem;margin:0 auto;overflow:hidden;padding:calc(max(12vh,64px) + var(--haut)) calc(var(--bord-feuille) + var(--marge-feuille)) calc(104px + var(--bas))}
 .page.serree{padding-top:calc(max(6vh,40px) + var(--haut))}
 .page.tres-serree{padding-top:calc(28px + var(--haut));padding-bottom:calc(86px + var(--bas))}
