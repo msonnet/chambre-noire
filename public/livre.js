@@ -126,9 +126,31 @@ function creerSon(){
   }
   /* Le tourne-disque : un disque à deux faces (musique/disques.json), lu par un élément audio qui passe par le labo
      (un petit haut-parleur, les craquements du vinyle) ; à la fin de la face, l'aiguille tourne dans le dernier sillon. */
-  const PL={disques:null,face:'a',piste:0,joue:false,arret:false,fin:false,el:null,craq:null,sillon:null,charge:null};
+  const PL={disques:null,face:'a',piste:0,joue:false,arret:false,fin:false,el:null,craq:null,sillon:null,charge:null,blobs:{},enCours:{},dispo:false};
   try{const f=localStorage.getItem('chambre-noire-face');if(f)PL.face=f;}catch(_){}
-  fetch('musique/disques.json').then(r=>r.ok?r.json():null).then(d=>{PL.disques=d;if(d&&!d[PL.face])PL.face=Object.keys(d)[0];}).catch(()=>{});
+  fetch('musique/disques.json').then(r=>r.ok?r.json():null).then(d=>{PL.disques=d;if(d&&!d[PL.face])PL.face=Object.keys(d)[0];if(d){plPrecharger(PL.face,PL.piste);plVerifier();}}).catch(()=>{});
+  /* Les morceaux sont lus depuis la copie gardée sur le téléphone (ou le réseau), chargés à l'avance en entier :
+     on peut ainsi les jouer tout de suite, au toucher, même sans réseau */
+  function plFichier(face,piste){const d=PL.disques&&PL.disques[face];const p=d&&d.pistes[piste];return p?p.fichier:null;}
+  function plPrecharger(face,piste){
+    const f=plFichier(face,piste);
+    if(!f||PL.blobs[f]||PL.enCours[f])return PL.enCours[f]||Promise.resolve(PL.blobs[f]);
+    PL.enCours[f]=fetch(f).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.blob();}).then(b=>{
+      PL.blobs[f]=URL.createObjectURL(b);
+      /* On n'en garde que quelques-uns en mémoire */
+      const cles=Object.keys(PL.blobs);
+      while(cles.length>3){const k=cles.shift();if(PL.el&&PL.el.src===PL.blobs[k])continue;URL.revokeObjectURL(PL.blobs[k]);delete PL.blobs[k];}
+      return PL.blobs[f];
+    }).catch(()=>null).finally(()=>{delete PL.enCours[f];});
+    return PL.enCours[f];
+  }
+  /* Le disque est-il là ? (le réseau, ou la copie gardée de la face posée sur le plateau) */
+  function plVerifier(){
+    const f=plFichier(PL.face,0);
+    if(navigator.onLine||PL.blobs[f]){PL.dispo=true;return;}
+    try{caches.match(f).then(m=>{PL.dispo=!!m;}).catch(()=>{PL.dispo=false;});}catch(_){PL.dispo=false;}
+  }
+  addEventListener('online',()=>plVerifier());addEventListener('offline',()=>plVerifier());
   function plChaine(){
     if(PL.el||!ctx)return;
     const el=new Audio();el.preload='auto';PL.el=el;
@@ -152,9 +174,12 @@ function creerSon(){
     g.gain.value=VOL[cle];s.connect(g);g.connect(bus.labo);s.start(ctx.currentTime+.05);PL[nom]={s,g,t:ctx.currentTime+.05};
   }
   function plCharger(jouerTout){
-    const p=PL.disques[PL.face].pistes[PL.piste];
-    PL.el.src=p.fichier;PL.el.currentTime=0;PL.charge=PL.face+PL.piste;
-    if(jouerTout)plJouer();
+    const f=plFichier(PL.face,PL.piste),cle=PL.face+PL.piste,u=PL.blobs[f];
+    PL.charge=cle;
+    if(u||navigator.onLine){PL.el.src=u||f;PL.el.currentTime=0;if(jouerTout)plJouer();}
+    else plPrecharger(PL.face,PL.piste).then(v=>{if(PL.charge!==cle||!PL.joue)return;PL.el.src=v||f;PL.el.currentTime=0;if(jouerTout)plJouer();});
+    /* Le morceau suivant est chargé pendant celui-ci */
+    const n=PL.disques[PL.face].pistes.length;plPrecharger(PL.face,(PL.piste+1)%n);
   }
   function plJouer(){const pr=PL.el.play();if(pr&&pr.catch)pr.catch(e=>erreurs.push('platine : '+(e&&e.message||e)));}
   function aiguille(descend,auto){
@@ -164,6 +189,7 @@ function creerSon(){
   }
   const platine={
     pret:()=>!!PL.disques,
+    dispo:()=>{plVerifier();return !!PL.disques&&PL.dispo;},
     etat:()=>{const d=PL.disques&&PL.disques[PL.face];const p=d&&d.pistes[PL.piste];return {joue:PL.joue,arret:PL.arret,fin:PL.fin,face:PL.face,faceTitre:d?d.titre:'',piste:PL.piste,nPistes:d?d.pistes.length:0,titre:p?p.titre:'',auteur:p?p.auteur+(p.interprete?' ('+p.interprete+')':''):'',position:PL.el?Math.round(PL.el.currentTime*10)/10:0,lit:!!(PL.el&&!PL.el.paused)};},
     /* Jouer : poser l'aiguille ; après une pause, elle retrouve l'endroit du morceau où on l'avait relevée */
     lire(){
@@ -771,7 +797,7 @@ const types={
       /* Une fois la lampe allumée, on voit le tourne-disque : on propose un disque (sauf s'il tourne déjà, ou si l'on a dit non) */
       if(P.clic&&!P.demande&&u>1){
         P.demande=true;
-        if(SON.ecoute()&&SON.platine.pret()&&!SON.platine.etat().joue&&!refusDisque)poserQuestion(P);else P.depart=P.tLampe+SEUIL_REGARD;
+        if(SON.ecoute()&&SON.platine.dispo()&&!SON.platine.etat().joue&&!refusDisque)poserQuestion(P);else P.depart=P.tLampe+SEUIL_REGARD;
       }
       if(P.question&&P.t-P.tLampe>14)repondre(P,false);
       const allume=P.clic?lisse(clamp(u/.35)):0,va=P.clic?lisse(clamp((P.t-P.depart)/SEUIL_APPROCHE)):0;
@@ -1096,8 +1122,12 @@ function boucle(t){
 requestAnimationFrame(boucle);
 try{stage.focus({preventScroll:true});}catch(_){}
 
-/* Le livre gardé sur le téléphone, pour le lire sans réseau */
+/* Le livre gardé sur le téléphone, pour le lire sans réseau ; puis, en arrière-plan, le disque */
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost')){
-  addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{});});
+  addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js').then(()=>navigator.serviceWorker.ready).then(reg=>{
+      setTimeout(()=>{try{if(reg.active)reg.active.postMessage('musique');}catch(_){}},4000);
+    }).catch(()=>{});
+  });
 }
 })();

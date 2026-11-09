@@ -96,7 +96,14 @@ def maj_cache():
     version = h.hexdigest()[:10]
     sw = (RACINE / 'outils/sw-gabarit.js').read_text()
     liste = ',\n  '.join(json.dumps('./' if f == 'index.html' else f) for f in fichiers)
-    sw = sw.replace('/*VERSION*/', version).replace('/*FICHIERS*/', liste)
+    # Le disque : gardé à part, avec sa propre version (il n'est retéléchargé que si la musique change)
+    morceaux = sorted(str(p.relative_to(PUB)) for p in PUB.glob('musique/*/*.mp3'))
+    hm = hashlib.sha256()
+    for f in morceaux:
+        hm.update(f.encode()); hm.update((PUB / f).read_bytes())
+    sw = (sw.replace('/*VERSION*/', version).replace('/*FICHIERS*/', liste)
+            .replace('/*MVERSION*/', hm.hexdigest()[:10]).replace('/*MORCEAUX*/', ',\n  '.join(json.dumps(f) for f in morceaux)))
+    print(f'disque : {len(morceaux)} morceaux, {sum((PUB / f).stat().st_size for f in morceaux)/1e6:.1f} Mo, gardés à part')
     (PUB / 'sw.js').write_text(sw)
     taille = sum((PUB / f).stat().st_size for f in fichiers)
     print(f'hors ligne : {len(fichiers)} fichiers, {taille/1e6:.1f} Mo, version {version}')
