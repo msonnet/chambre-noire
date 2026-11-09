@@ -446,7 +446,7 @@ function tailleCommune(){
   const vs=m.querySelectorAll('.v');let t=vs.length?parseFloat(getComputedStyle(vs[0]).fontSize):0,plus=0;
   vs.forEach(v=>{const w=v.getBoundingClientRect().width;if(w>plus)plus=w;});
   m.remove();
-  if(plus>largeur&&t){t=Math.floor(t*largeur/plus*.98*4)/4;r.style.setProperty('--t-vers',t+'px');}
+  if(plus>largeur&&t){t=Math.floor(t*largeur/plus*.98*10)/10;r.style.setProperty('--t-vers',t+'px');}
   TAILLE={t,largeur};
 }
 /* En hauteur : un poème trop long pour l'écran se resserre (marge du haut, puis taille des vers) */
