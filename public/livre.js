@@ -433,34 +433,34 @@ function sauverChoix(l){try{localStorage.setItem(CLE_CHOIX,JSON.stringify(l));}c
 function lirePos(){try{return localStorage.getItem(CLE_POS);}catch(_){return null;}}
 function sauverPos(id){try{if(id)localStorage.setItem(CLE_POS,id);else localStorage.removeItem(CLE_POS);}catch(_){}}
 
-/* Un poème se règle sur l'écran sans toucher au texte. D'abord en largeur : aucun vers ne passe à la ligne (quatrains et
-   tercets restent intacts) ; on réduit la taille des vers, et pour les vers très longs on élargit un peu la feuille.
-   Puis en hauteur : marge du haut, taille, interligne. */
-const VERS_PLANCHER=10;
-function plusLongVers(page){
-  let m=0;page.classList.add('mesure');
-  page.querySelectorAll('.v').forEach(v=>{const w=v.getBoundingClientRect().width;if(w>m)m=w;});
-  page.classList.remove('mesure');return m;
+/* Une seule taille de vers pour tout le livre, réglée sur l'écran : le vers de sonnet le plus long tient sur une ligne
+   (quatrains et tercets restent intacts). Les autres poèmes prennent la même taille. */
+let TAILLE={t:0,largeur:0};
+function tailleCommune(){
+  const r=document.documentElement;r.style.removeProperty('--t-vers');
+  const m=document.createElement('div');m.className='page mesure';m.setAttribute('aria-hidden','true');
+  m.style.cssText='position:absolute;left:0;top:0;width:100%;height:auto;visibility:hidden;pointer-events:none';
+  document.querySelectorAll('.planche[data-kind="texte"] .page.sonnet .v').forEach(v=>m.appendChild(v.cloneNode(true)));
+  stage.appendChild(m);
+  const cs=getComputedStyle(m),largeur=m.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight);
+  const vs=m.querySelectorAll('.v');let t=vs.length?parseFloat(getComputedStyle(vs[0]).fontSize):0,plus=0;
+  vs.forEach(v=>{const w=v.getBoundingClientRect().width;if(w>plus)plus=w;});
+  m.remove();
+  if(plus>largeur&&t){t=Math.floor(t*largeur/plus*.98*4)/4;r.style.setProperty('--t-vers',t+'px');}
+  TAILLE={t,largeur};
 }
-function largeurUtile(page){const cs=getComputedStyle(page);return page.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight);}
+/* En hauteur : un poème trop long pour l'écran se resserre (marge du haut, puis taille des vers) */
 function ajusterPage(page){
   if(!page||!page.clientHeight)return;
-  page.style.removeProperty('--t-vers');page.classList.remove('serree','tres-serree','large');
+  page.style.removeProperty('--t-vers');page.classList.remove('serree','tres-serree');
   const v=page.querySelector('.v');if(!v)return;
-  let t=parseFloat(getComputedStyle(v).fontSize),plancher=VERS_MIN;
-  const m=plusLongVers(page);
-  if(m>largeurUtile(page)){
-    let u=t*largeurUtile(page)/m*.975;
-    if(u<12.5){page.classList.add('large');u=t*largeurUtile(page)/m*.975;}
-    t=Math.max(VERS_PLANCHER,Math.min(t,Math.floor(u*4)/4));plancher=Math.min(VERS_MIN,t);
-    page.style.setProperty('--t-vers',t+'px');
-  }
   const deborde=()=>page.scrollHeight>page.clientHeight+1;
   if(!deborde())return;
   page.classList.add('serree');
-  while(deborde()&&t>plancher){t=Math.max(plancher,t-.5);page.style.setProperty('--t-vers',t+'px');}
+  let t=parseFloat(getComputedStyle(v).fontSize);
+  while(deborde()&&t>VERS_MIN){t=Math.max(VERS_MIN,t-.5);page.style.setProperty('--t-vers',t+'px');}
   /* Les très petits écrans : interligne plus serré, puis un demi-point de moins */
-  if(deborde()){page.classList.add('tres-serree');while(deborde()&&t>plancher-1){t-=.5;page.style.setProperty('--t-vers',t+'px');}}
+  if(deborde()){page.classList.add('tres-serree');while(deborde()&&t>VERS_MIN-1){t-=.5;page.style.setProperty('--t-vers',t+'px');}}
 }
 function ajuster(P){
   const page=P.el.querySelector('.page');if(!page)return;
@@ -686,11 +686,7 @@ function echelle(){
   const g=$('grille'),v=g&&g.querySelector('.vue');if(!v||!v.clientWidth)return;
   g.style.setProperty('--mm',(v.clientWidth/35).toFixed(3)+'px');
   g.querySelectorAll('.vue .mini').forEach(m=>{m.style.transform='scale('+(m.parentElement.clientWidth/480)+')';});
-  g.querySelectorAll('.vue .mini:not([data-ajuste]) .page').forEach(pg=>{
-    pg.parentElement.dataset.ajuste='1';
-    const m=plusLongVers(pg)/(parseFloat(pg.parentElement.style.transform.replace('scale(',''))||1),d=largeurUtile(pg),v=pg.querySelector('.v');
-    if(v&&m>d)pg.style.setProperty('--t-mini',(parseFloat(getComputedStyle(v).fontSize)*d/m*.97).toFixed(2)+'px');
-  });
+  if(TAILLE.t&&TAILLE.largeur)g.style.setProperty('--t-mini',(TAILLE.t*376/TAILLE.largeur).toFixed(2)+'px');
 }
 /* Le compte-fils : garder le doigt sur la planche pour la regarder de près ; il suit le doigt, au-dessus de lui */
 const cf=$('compte-fils'),cfVue=cf.firstElementChild,LOUPE=3.4;
@@ -1218,6 +1214,7 @@ $('vis-fermer').addEventListener('click',fermerVis);
 $('vis-prec').addEventListener('click',()=>visNav(-1));
 $('vis-suiv').addEventListener('click',()=>visNav(1));
 addEventListener('resize',()=>{
+  tailleCommune();planches.forEach(Q=>{Q.ajuste=null;});
   const P=planches[cur];
   if(P.kind==='dessin')taille(P);
   if(P.kind==='texte'){P.ajuste=null;ajuster(P);}
@@ -1238,7 +1235,8 @@ planches.forEach(P=>{if(P.id&&deja.includes(P.id)&&types[P.kind].restaurer)types
 types.entree.enter(planches[0]);
 majNav();
 /* Les polices arrivées, les poèmes longs se réajustent */
-if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{planches.forEach(P=>{P.ajuste=null;});const P=planches[cur];if(P.kind==='texte')ajuster(P);});
+tailleCommune();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{tailleCommune();planches.forEach(P=>{P.ajuste=null;});const P=planches[cur];if(P.kind==='texte')ajuster(P);});
 
 let tPrec=performance.now(),dernier=null,lampeV=-1,tourPl=0;
 function boucle(t){

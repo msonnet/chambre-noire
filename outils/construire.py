@@ -34,6 +34,8 @@ def planche_poeme(p, k):
     feuillet = p['feuillets'][k]
     nlignes = sum(len(s['vers']) for s in feuillet)
     long = ' long' if nlignes >= 18 else ''
+    if len(p['feuillets']) == 1 and [len(x['vers']) for x in feuillet] == [4, 4, 3, 3]:
+        long += ' sonnet'
     if k == 0:
         pid, label, num = p['id'], f"Poème {p['num']}", f'<p class="num">{p["num"]}</p>\n'
     else:
