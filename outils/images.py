@@ -28,3 +28,20 @@ w=900;h=round(im.height*w/im.width);im=im.resize((w,h),Image.LANCZOS);a=np.asarr
 Image.fromarray(np.dstack([np.full((a.shape[0],a.shape[1],3),255,np.uint8),a]),'RGBA').save(f'{S}/couverture.webp',lossless=True,method=6)
 print('couverture',w,h,os.path.getsize(f'{S}/couverture.webp')//1024,'Ko')
 print('total dessins',tot//1024,'Ko')
+
+# La texture du papier (feuilles des poèmes, agrandissements, planche-contact) : un grain fin, une marbrure douce et
+# quelques fibres, qui se raccorde sans couture ; appliquée en « multiplier » sur la couleur du papier.
+def texture_papier(sortie='public/img/papier.webp', N=256, graine=7):
+    rng = np.random.default_rng(graine)
+    def bruit(pente):
+        f = np.fft.fftfreq(N); fx, fy = np.meshgrid(f, f); r = np.sqrt(fx**2 + fy**2); r[0, 0] = 1
+        spec = (rng.normal(size=(N, N)) + 1j * rng.normal(size=(N, N))) / r**pente; spec[0, 0] = 0
+        x = np.real(np.fft.ifft2(spec)); return (x - x.mean()) / x.std()
+    grain, nuage = bruit(.35), bruit(1.6)
+    fib = np.zeros((N, N))
+    for _ in range(260):
+        x0, y0 = rng.uniform(0, N, 2); a = rng.uniform(0, np.pi); L = rng.uniform(6, 22); v = rng.choice([-1, 1]) * rng.uniform(.4, 1)
+        for t in np.linspace(0, L, int(L * 2)):
+            fib[int(y0 + t * np.sin(a)) % N, int(x0 + t * np.cos(a)) % N] += v
+    img = np.clip(1 - .024 * grain - .015 * nuage - .02 * fib, .9, 1.0)
+    Image.fromarray((img * 255).round().astype(np.uint8), 'L').save(sortie, quality=86, method=6)
