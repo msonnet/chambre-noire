@@ -26,7 +26,7 @@ Le livre s'installe sur l'écran d'accueil, se lit sans réseau et reprend là o
 
 - **Allumer la lampe** : au seuil, dans le noir, le voyant de l'interrupteur apparaît ; le lecteur allume lui-même la lampe rouge (toucher l'interrupteur ou l'écran).
 - **Sortir à tout moment** : « sortir », en haut à droite du labo. On ouvre le robinet pour rincer les tirages, puis on pousse la porte. La planche où l'on était est gardée ; « Rentrer dans la chambre noire » y ramène.
-- **Le tourne-disque** : on le voit dans l'image du labo, au seuil (plateau, disque, bras, pochette contre le mur) ; une fois la lampe allumée, « Voulez-vous écouter un disque ? » (oui / non merci ; la question ne revient pas si le disque tourne déjà ou si l'on a dit non). Quand le disque joue, il tourne dans l'image et le bras est posé dessus. Dans le labo, une note de musique (sous « sortir ») ouvre les commandes : pause / reprendre (au même endroit du morceau), morceau suivant, autre face. Son par le labo, assez bas (petit haut-parleur, craquements du vinyle) ; l'aiguille se relève d'elle-même pour le silence de XVII. Les disques se lisent sur le réseau (25 Mo, pas gardés hors ligne).
+- **Le tourne-disque** : on le voit dans l'image du labo, au seuil (plateau, disque, bras, pochette contre le mur) ; une fois la lampe allumée, « Voulez-vous écouter un disque ? » (oui / non merci ; la question ne revient pas si le disque tourne déjà ou si l'on a dit non). Quand le disque joue, il tourne dans l'image et le bras est posé dessus. Dans le labo, une note de musique (à côté de « sortir ») ouvre les commandes : pause / reprendre (au même endroit du morceau), morceau suivant, autre face. Son par le labo, assez bas (petit haut-parleur, craquements du vinyle) ; l'aiguille se relève d'elle-même pour le silence de XVII. Les disques se lisent sur le réseau (25 Mo, pas gardés hors ligne).
 
 ## Le disque
 
@@ -36,9 +36,9 @@ Chopin (Musopen, *The Complete Works of Frédéric Chopin*, CC0), Rachmaninov et
 
 Très rarement, la vie du bâtiment (un plancher à l'étage, un radiateur, de l'eau dans un tuyau), entendue à travers le plafond ; parfois, la pince qui tape le bord de la cuvette quand on sort un poème du bain. Tous CC0, préparés par `outils/prep_sons.py`.
 
-## Essai « papier »
+## Les poèmes sur papier
 
-En ajoutant `?papier` à l'adresse, les poèmes se développent comme sur un vrai papier photo : une feuille rougie par la lampe dans la cuvette, le texte qui monte en sombre, puis la lumière blanche une fois le tirage fixé. C'est un essai à comparer avec la version actuelle (clair sur noir).
+Les poèmes se développent comme sur un vrai papier photo : une feuille rougie par la lampe dans la cuvette, le texte qui monte en sombre, puis la lumière blanche (un ivoire atténué) une fois le tirage fixé. Choix de Nathan le 9 novembre. L'ancienne version, en clair sur noir, reste visible en ajoutant `?negatif` à l'adresse. Réglages : `FEUILLE_FAIBLE`, `FEUILLE_LAMPE`, `FEUILLE_JOUR`, `ENCRE_LABO`, `ENCRE_JOUR`.
 
 ## Après une modification
 

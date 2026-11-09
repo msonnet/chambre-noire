@@ -335,9 +335,11 @@ const reduit=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const NOIR=[18,18,18],LATENT=[176,44,32],OS=[233,229,220];
 /* La lumière qu'on promène sur les dessins : rouge, inactinique, la seule permise dans un labo */
 const LUMIERE=[238,122,98];
-/* Essai « papier » (adresse terminée par ?papier) : les poèmes se développent comme sur un vrai papier photo */
-const PAPIER=/[?&]papier\b/.test(location.search);
-const FEUILLE_FAIBLE=[50,27,24],FEUILLE_LAMPE=[92,40,33],FEUILLE_JOUR=[226,220,208],ENCRE_LABO=[26,12,11],ENCRE_JOUR=[30,26,24];
+/* Les poèmes se développent comme sur un vrai papier photo : une feuille rougie par la lampe dans la cuvette,
+   le texte qui monte en sombre, puis la lumière blanche, atténuée, une fois le tirage fixé (choix de Nathan, 9 novembre).
+   L'ancienne version, en clair sur noir, reste visible avec ?negatif à la fin de l'adresse. */
+const PAPIER=!/[?&]negatif\b/.test(location.search);
+const FEUILLE_FAIBLE=[50,27,24],FEUILLE_LAMPE=[92,40,33],FEUILLE_JOUR=[196,188,174],ENCRE_LABO=[26,12,11],ENCRE_JOUR=[28,24,22];
 if(PAPIER)document.documentElement.classList.add('papier');
 /* Réglages du labo (secondes et proportions) */
 const DEV_TEXTE=5.2,FIXAGE=2,DEV_DESSIN=5,LUEUR=1.3,SEUIL_DESSIN=.75,GAIN_DESSIN=.45,AMBIANCE=.3;
@@ -398,7 +400,7 @@ function ajuster(P){
 function peindreTexte(P){
   const b=lisse(P.blanc);
   if(PAPIER){
-    /* Essai « papier » : une feuille dans la cuvette, rougie par la lampe ; le texte monte en sombre ;
+    /* Une feuille dans la cuvette, rougie par la lampe ; le texte monte en sombre ;
        une fois fixé, on allume la lumière blanche pour regarder le tirage */
     const fond=mix(mix(FEUILLE_FAIBLE,FEUILLE_LAMPE,lisse(P.eclair||0)),FEUILLE_JOUR,b);
     P.el.style.setProperty('--feuille',rgb(fond));
@@ -797,7 +799,7 @@ const types={
     down(P){P.silence=0;},
     tick(P,dt){
       let sale=false;
-      /* Essai « papier » : la feuille s'éclaire quand la lampe s'intensifie */
+      /* La feuille s'éclaire quand la lampe s'intensifie */
       if(PAPIER){const c=holding&&!P.dev?1:0;if(P.eclair!==c){P.eclair=c>P.eclair?Math.min(1,P.eclair+dt/1.2):Math.max(0,P.eclair-dt/1.2);sale=true;}}
       if(!P.dev){
         SON.developper(P.id,holding);
@@ -902,7 +904,7 @@ const types={
 };
 
 /* Le tourne-disque. On le voit dans le labo, au seuil ; on y propose un disque. Ensuite, dans le labo,
-   une note de musique ouvre ses commandes : jouer ou mettre en pause, changer de morceau, l'autre face. */
+   une note de musique, à côté de « sortir », ouvre ses commandes : jouer ou mettre en pause, changer de morceau, l'autre face. */
 const noteEl=$('note'),panPl=$('platine-commandes'),questionEl=$('question-disque');
 let plOuvert=false,plMinuterie=0,refusDisque=false;
 function majPlatine(){
