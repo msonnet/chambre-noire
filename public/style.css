@@ -96,16 +96,26 @@ svg.labo{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:
    sur les grands écrans : le mur continue de chaque côté). Le battant tourne en 3D sur ses gonds ; derrière, la pièce claire. */
 .sas{position:absolute;inset:0;overflow:hidden;background:#0b0606;opacity:0;visibility:hidden;pointer-events:none}
 .sas .cadre{position:absolute;left:50%;top:50%;width:390px;height:844px;margin:-422px 0 0 -195px}
-.sas .vue{position:absolute;inset:0;transform-origin:236px 462px}
-.sas .piece{position:absolute;left:84px;top:160px;width:222px;height:590px;z-index:1;filter:blur(.5px)}
+.sas .vue{position:absolute;inset:0}
+.sas .piece{position:absolute;z-index:1}
+/* L'éblouissement de la pièce claire, au sortir du noir : un voile blanc qui s'efface à mesure que l'œil s'y fait */
+.sas .voile{position:absolute;left:-500px;right:-500px;top:-200px;bottom:-500px;z-index:1;background:#fbf8f2;opacity:.9}
 .sas .gond{position:absolute;inset:0;z-index:2;perspective:700px;perspective-origin:195px 470px}
 .sas .battant{position:absolute;left:92px;top:168px;width:206px;height:574px;transform-origin:0 50%;will-change:transform}
 .sas .battant svg{display:block;width:100%;height:100%}
 .sas .jour,.sas .ombre{position:absolute;inset:0;opacity:0}
 .sas .jour{background:linear-gradient(90deg,rgba(200,196,188,.25),rgba(236,230,218,.9))}
 .sas .ombre{background:#030101}
-.sas .mur{position:absolute;left:-700px;top:-400px;width:1790px;height:1644px;z-index:3;overflow:visible}
+.sas .mur{position:absolute;z-index:3}
+/* Pendant qu'on passe la porte, chaque plan bouge à sa vitesse : on les garde prêts à glisser */
+.sas.marche .mur,.sas.marche .piece,.sas.marche .vue{will-change:transform}
 .sas .blanc{position:absolute;inset:0;background:#f4f0e8;opacity:0}
+
+/* En sortant, sur le tourne-disque de l'image du labo : lever l'aiguille */
+.aiguille{position:absolute;z-index:2;margin:0;padding:0 0 10px;border:0;background:none;cursor:pointer;display:flex;align-items:flex-end;justify-content:center;font:italic 12px/1.2 var(--f-texte);color:var(--cendre)}
+.aiguille[hidden]{display:none}
+.aiguille span{padding:.3em .2em .15em;border-bottom:1px solid rgba(139,133,123,.45);text-shadow:0 0 8px #000,0 0 3px #000}
+.aiguille:focus-visible{outline:1px solid var(--cendre);outline-offset:2px}
 
 /* Dehors : la planche-contact */
 .dehors{position:absolute;inset:0;overflow-y:auto;touch-action:pan-y;color:#e6e0d4;opacity:0;visibility:hidden;transition:opacity 1.4s ease,visibility 1.4s;-webkit-overflow-scrolling:touch;user-select:none}

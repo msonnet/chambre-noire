@@ -62,9 +62,7 @@ x=lire('434193')
 segH=[(1.46,2.12),(2.76,3.72),(4.74,5.74),(8.62,10.74),(28.42,29.18),(30.54,31.46)]
 b+=[regler(couper(x,a-.05,c+.25,.03,.25),rms=-24,crete=-4) for a,c in segH]
 s,pos=sprite(b);A['bain']=(s,pos,80)
-# 8. Dehors : le vent dans un peuplier (felix.blume, CC0), sans oiseaux
-x=lire('167434');d=regler(couper(x,1,46,.5,.5),crete=-2)
-A['dehors']=(d,[[0,round(len(d)/SR,3)]],64)
+# 8. Dehors : le vent dans un peuplier (felix.blume) — retiré le 9 nov. 2026 (Nathan : on l'entendait comme de la pluie sur la planche-contact)
 # 9. Le sténopé : un vrai obturateur d'appareil argentique, ouvert 1/4 s (cabled_mess, CC0)
 s,pos=sprite([regler(couper(lire(f),0,.7,.001,.12),crete=-3) for f in ('338220','338219')]);A['obturateur']=(s,pos,112)
 # 10. Le papier qu'on sort et qu'on glisse dans le bain (matieke, Pipelenisf, leonseptavaux, CC0)
