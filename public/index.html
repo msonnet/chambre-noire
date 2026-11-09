@@ -326,7 +326,7 @@
 <div class="dehors">
 <div class="dehors-page">
 <h2>Planche-contact</h2>
-<p class="chapeau">Les tirages développés dans la chambre noire, en bandes de six vues. Toucher une vue pour l’agrandir&nbsp;; le crayon gras garde la trace des vues regardées.</p>
+<p class="chapeau">Les vues développées dans la chambre noire, tirées par contact. Garder le doigt sur la planche pour la regarder au compte-fils&nbsp;; toucher une vue pour l’agrandir. Le crayon gras garde la trace des vues regardées.</p>
 <div class="feuille-contact"><div class="grille" id="grille"></div></div>
 <div class="actions">
 <button class="lien" id="rentrer" type="button">Rentrer dans la chambre noire</button>
@@ -339,6 +339,8 @@
 </div>
 </div>
 </div>
+<svg class="defs" width="0" height="0" aria-hidden="true"><filter id="cire" x="-25%" y="-25%" width="150%" height="150%"><feTurbulence type="fractalNoise" baseFrequency=".17 .26" numOctaves="2" seed="4" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -2.2 2.05" result="m"/><feComposite in="SourceGraphic" in2="m" operator="in"/></filter></svg>
+<div class="compte-fils" id="compte-fils" aria-hidden="true"><div class="cf-vue"></div></div>
 <div class="visionneuse" id="visionneuse" role="dialog" aria-modal="true" aria-label="Tirage">
 <div class="tirage" id="tirage"></div>
 <button class="vis-btn" id="vis-fermer" type="button" aria-label="Revenir à la planche-contact">×</button>

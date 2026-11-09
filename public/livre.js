@@ -375,7 +375,9 @@ const SILENCE_XVII=2,APPARITION_XVII=1.5;
    le lecteur allume lui-même la lampe rouge et voit le labo : la lampe, la corde à linge où sèchent ses tirages,
    les cuvettes sur la paillasse, l'agrandisseur. SEUIL_REGARD secondes après l'allumage, on s'approche de la cuvette,
    en SEUIL_APPROCHE secondes */
-const SEUIL_VOYANT=reduit?.5:1.8,SEUIL_REGARD=reduit?1.2:3.4,SEUIL_APPROCHE=reduit?.6:1.6;
+const SEUIL_VOYANT=reduit?.5:4.2,SEUIL_REGARD=reduit?1.2:3.4,SEUIL_APPROCHE=reduit?.6:1.6;
+/* « Laisser l'œil s'habituer au noir » jusqu'à SEUIL_OEIL ; un temps de noir ; puis « Allumer la lampe » à SEUIL_ALLUMER */
+const SEUIL_OEIL=reduit?2.2:5.6,SEUIL_ALLUMER=reduit?3.2:7;
 /* Taille minimale des vers quand un poème doit se resserrer pour tenir sur l'écran (en pixels) */
 const VERS_MIN=11.5;
 const CLE='chambre-noire-tirages',CLE_POS='chambre-noire-position',CLE_CHOIX='chambre-noire-crayon';
@@ -554,52 +556,127 @@ function rendre(P){
 }
 
 /* Planche-contact et visionneuse.
-   Une vraie planche : les bandes de pellicule tirées par contact sur le papier, les perforations, les numéros de vue
-   et le nom du film sur le bord ; les vues pas encore développées restent noires ; le photographe entoure au crayon gras
-   rouge les vues qu'il a regardées à l'agrandisseur. */
+   Une vraie planche 18×24 : sept bandes de six vues (les 42 tirages), posées à la main sur le papier et tirées par contact.
+   Tout y est à l'échelle d'un film 35 mm (--mm : un millimètre de film à l'écran) : vues 24×36 aux coins arrondis,
+   huit perforations par vue, numéros de vue et nom du film en tout petit sur le bord, quelques poussières.
+   La pellicule vierge (les vues pas encore développées) reste du gris sombre du support ; le photographe entoure au
+   crayon gras rouge les vues qu'il a regardées à l'agrandisseur ; on regarde la planche de près au compte-fils. */
 function nettoyer(n){n.querySelectorAll('[style]').forEach(e=>e.removeAttribute('style'));return n;}
-/* Un trait de crayon gras, un peu de travers, différent pour chaque vue (mais toujours le même pour une vue donnée) */
+/* Un hasard qui retombe toujours de la même façon (bandes de travers, poussières, crayon) */
+function hasard(n){let g=(n*9301+49297)%233280;return ()=>(g=(g*9301+49297)%233280)/233280;}
+const NS='http://www.w3.org/2000/svg';
+/* Un trait de crayon gras : un cadre tiré vite à main levée (côtés un peu bombés, coins arrondis, le trait déborde
+   au départ et à l'arrivée), repassé ; la cire accroche mal le papier brillant (filtre #cire). Jamais le même d'une vue à l'autre. */
+function trait(pts,k){
+  let d='M'+pts[0][0].toFixed(1)+' '+pts[0][1].toFixed(1);
+  for(let i=1;i<pts.length-1;i++){
+    const [px,py]=pts[i-1],[vx,vy]=pts[i],[nx,ny]=pts[i+1];
+    const l1=Math.hypot(px-vx,py-vy)||1,l2=Math.hypot(nx-vx,ny-vy)||1,k1=Math.min(k,l1/2),k2=Math.min(k,l2/2);
+    d+=' L'+(vx+(px-vx)*k1/l1).toFixed(1)+' '+(vy+(py-vy)*k1/l1).toFixed(1)+' Q'+vx.toFixed(1)+' '+vy.toFixed(1)+' '+(vx+(nx-vx)*k2/l2).toFixed(1)+' '+(vy+(ny-vy)*k2/l2).toFixed(1);
+  }
+  const z=pts[pts.length-1];return d+' L'+z[0].toFixed(1)+' '+z[1].toFixed(1);
+}
 function crayon(fig,j,anime){
   if(fig.querySelector('.crayon'))return;
-  let g=j*9301+49297;const h=()=>((g=(g*233280+49297)%2147483647)/2147483647);
-  const a=()=>(h()-.5)*5;
-  const p=[[-6+a(),-5+a()],[106+a(),-4+a()],[107+a(),105+a()],[-5+a(),104+a()],[-7+a(),-3+a()],[8+a(),-6+a()]];
-  const d='M'+p.map(q=>q[0].toFixed(1)+' '+q[1].toFixed(1)).join(' L');
-  const ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg');
+  const h=hasard(j*31+5),a=(k=1)=>(h()-.5)*k;
+  const svg=document.createElementNS(NS,'svg');
   svg.setAttribute('class','crayon'+(anime?' trace':''));svg.setAttribute('viewBox','0 0 100 100');svg.setAttribute('preserveAspectRatio','none');svg.setAttribute('aria-hidden','true');
-  const pa=document.createElementNS(ns,'path');pa.setAttribute('d',d);pa.setAttribute('pathLength','1');svg.appendChild(pa);
+  const g=document.createElementNS(NS,'g');g.setAttribute('filter','url(#cire)');svg.appendChild(g);
+  const c=[[-15+a(6),-5+a(3)],[115+a(6),-4+a(3)],[114+a(6),105+a(3)],[-14+a(6),104+a(3)]];
+  [[2.1,.58,0],[1.3,.78,1.6],[.7,.5,2.8]].forEach(([w,o,e],k)=>{
+    const q=c.map(([x,y])=>[x+a(e*2),y+a(e)]);
+    /* départ un peu avant le premier coin, retour qui le dépasse ; côtés bombés par un point milieu */
+    const tour=[[q[0][0]-3+a(5),q[0][1]+6+a(4)],q[0]];
+    for(let i=1;i<=4;i++){const A=q[i-1],B=q[i%4],dx=B[0]-A[0],dy=B[1]-A[1],L=Math.hypot(dx,dy),b=a(3.2);
+      tour.push([(A[0]+B[0])/2-dy/L*b,(A[1]+B[1])/2+dx/L*b*.7],i<4?B:[B[0]+a(3),B[1]-1.5+a(2)]);}
+    tour.push([q[0][0]+18+a(10),q[0][1]+a(3)]);
+    const pa=document.createElementNS(NS,'path');pa.setAttribute('d',trait(tour,7));pa.setAttribute('pathLength','1');
+    pa.style.strokeWidth=w;pa.style.opacity=o;pa.style.animationDelay=(k*.09)+'s';g.appendChild(pa);
+  });
   fig.appendChild(svg);
+}
+/* Les poussières sur le négatif sortent en points blancs sur le tirage, et un cheveu */
+function poussieres(g){
+  const h=hasard(17),svg=document.createElementNS(NS,'svg');
+  svg.setAttribute('class','poussieres');svg.setAttribute('viewBox','0 0 100 100');svg.setAttribute('preserveAspectRatio','none');svg.setAttribute('aria-hidden','true');
+  for(let i=0;i<18;i++){const e=document.createElementNS(NS,'ellipse');e.setAttribute('cx',(h()*100).toFixed(2));e.setAttribute('cy',(h()*100).toFixed(2));
+    const r=.1+h()*h()*.32;e.setAttribute('rx',r.toFixed(3));e.setAttribute('ry',(r*.92).toFixed(3));e.setAttribute('opacity',(.3+h()*.5).toFixed(2));svg.appendChild(e);}
+  const x=8+h()*80,y=10+h()*75,pa=document.createElementNS(NS,'path');
+  pa.setAttribute('d','M'+x.toFixed(1)+' '+y.toFixed(1)+' c 2 -1.5 3.5 1 5 -.4 s 2.2 -2.6 3.4 -1.2');pa.setAttribute('class','cheveu');svg.appendChild(pa);
+  g.appendChild(svg);
 }
 function construireGrille(){
   const g=$('grille');g.innerHTML='';
-  const tirages=planches.filter(estTirage),choix=lireChoix();
+  const tirages=planches.filter(estTirage),choix=lireChoix(),h=hasard(7);
   for(let s=0;s<tirages.length;s+=PAR_BANDE){
     const bande=document.createElement('div');bande.className='bande';
-    const nom=document.createElement('span');nom.className='nom-film';nom.textContent='CHAMBRE NOIRE';nom.setAttribute('aria-hidden','true');bande.appendChild(nom);
+    /* posées à la main sous la vitre : jamais tout à fait droites ni alignées */
+    bande.style.transform='translateY('+((h()-.5)*.9).toFixed(2)+'%) rotate('+((h()-.5)*.5).toFixed(2)+'deg)';
     tirages.slice(s,s+PAR_BANDE).forEach((P,k)=>{
       const j=s+k;
-      const fig=document.createElement('figure');fig.className='vue '+P.kind;fig.dataset.id=P.id;
+      const fig=document.createElement('figure');fig.className='vue '+P.kind+(P.fixe?' dev':'');fig.dataset.id=P.id;
       const b=document.createElement('button');b.type='button';
+      const im=document.createElement('span');im.className='image';
       if(P.fixe){
         b.classList.add('dev');b.setAttribute('aria-label','Agrandir la vue '+(j+1)+', '+P.el.getAttribute('aria-label'));
-        if(P.kind==='texte'){const m=document.createElement('div');m.className='mini';const pg=nettoyer(P.el.querySelector('.page').cloneNode(true));pg.removeAttribute('style');pg.classList.remove('serree','tres-serree');m.appendChild(pg);b.appendChild(m);}
-        else{const im=document.createElement('img');im.src=P.el.dataset.vignette;im.alt='';im.decoding='async';im.loading='lazy';b.appendChild(im);}
+        if(P.kind==='texte'){const m=document.createElement('div');m.className='mini';const pg=nettoyer(P.el.querySelector('.page').cloneNode(true));pg.removeAttribute('style');pg.classList.remove('serree','tres-serree');m.appendChild(pg);im.appendChild(m);}
+        else{const i=document.createElement('img');i.src=P.el.dataset.vignette;i.alt='';i.decoding='async';im.appendChild(i);}
         b.addEventListener('click',()=>ouvrirVis(P));
       }else{
         b.setAttribute('aria-label','Vue '+(j+1)+', pas encore développée : rentrer dans la chambre noire pour la développer');
-        const v=document.createElement('span');v.className='vierge';v.textContent='à développer';b.appendChild(v);
         b.addEventListener('click',()=>rentrer(planches.indexOf(P)));
       }
+      b.appendChild(im);
+      const n=document.createElement('span');n.className='numero';n.setAttribute('aria-hidden','true');n.textContent=(j+1)+'      ▸'+(j+1)+'A';b.appendChild(n);
+      if(k===1||k===4){const f=document.createElement('span');f.className='nom-film';f.setAttribute('aria-hidden','true');f.textContent='CHAMBRE NOIRE   400';b.appendChild(f);}
       fig.appendChild(b);
-      const n=document.createElement('span');n.className='numero';n.setAttribute('aria-hidden','true');n.textContent=(j+1)+'  ▸'+(j+1)+'A';fig.appendChild(n);
       if(P.fixe&&choix.includes(P.id))crayon(fig,j,false);
       bande.appendChild(fig);
     });
     g.appendChild(bande);
   }
+  poussieres(g);
   requestAnimationFrame(echelle);
 }
-function echelle(){document.querySelectorAll('.vue .mini').forEach(m=>{m.style.transform='scale('+(m.parentElement.clientWidth/480)+')';});}
+function echelle(){
+  const g=$('grille'),v=g&&g.querySelector('.vue');if(!v||!v.clientWidth)return;
+  g.style.setProperty('--mm',(v.clientWidth/35).toFixed(3)+'px');
+  g.querySelectorAll('.vue .mini').forEach(m=>{m.style.transform='scale('+(m.parentElement.clientWidth/480)+')';});
+}
+/* Le compte-fils : garder le doigt sur la planche pour la regarder de près ; il suit le doigt, au-dessus de lui */
+const cf=$('compte-fils'),cfVue=cf.firstElementChild,LOUPE=3.4;
+let cfT=0,cfActif=false,cfD=null,cfQuitte=-1e4;
+function cfOuvrir(){
+  const g=$('grille'),c=g.cloneNode(true);c.removeAttribute('id');c.style.width=g.offsetWidth+'px';
+  c.querySelectorAll('button').forEach(b=>{b.tabIndex=-1;b.removeAttribute('aria-label');});
+  c.querySelectorAll('.crayon.trace').forEach(e=>e.classList.remove('trace'));
+  cfVue.replaceChildren(c);cfActif=true;cf.classList.add('visible');
+}
+function cfPlacer(x,y){
+  const r=$('grille').getBoundingClientRect(),S=cf.parentElement.getBoundingClientRect(),R=cf.offsetWidth/2;
+  let cy=y-R-38;if(cy-R<S.top+6)cy=y+R+38;
+  const cx=Math.min(Math.max(x,S.left+R+10),S.right-R-10);
+  cf.style.left=(cx-S.left)+'px';cf.style.top=(cy-S.top)+'px';
+  cfVue.style.transform='translate('+(R-(x-r.left)*LOUPE).toFixed(1)+'px,'+(R-(y-r.top)*LOUPE).toFixed(1)+'px) scale('+LOUPE+')';
+}
+function cfBouge(x,y){if(cfActif){cfPlacer(x,y);return;}if(Math.hypot(x-cfD.x,y-cfD.y)>8){clearTimeout(cfT);cfD=null;}}
+function cfStop(){clearTimeout(cfT);cfD=null;if(cfActif){cfActif=false;cfQuitte=performance.now();cf.classList.remove('visible');}}
+{
+  const g=$('grille');
+  g.addEventListener('pointerdown',e=>{
+    if(e.button>0)return;clearTimeout(cfT);
+    cfD={id:e.pointerId,x:e.clientX,y:e.clientY,doigt:e.pointerType!=='mouse'};
+    cfT=setTimeout(()=>{if(!cfD)return;cfOuvrir();cfPlacer(cfD.x,cfD.y);},300);
+  });
+  addEventListener('pointermove',e=>{if(cfD&&e.pointerId===cfD.id)cfBouge(e.clientX,e.clientY);});
+  g.addEventListener('touchmove',e=>{if(!cfD)return;if(cfActif&&e.cancelable)e.preventDefault();const t=e.touches[0];if(t)cfBouge(t.clientX,t.clientY);},{passive:false});
+  addEventListener('pointerup',e=>{if(cfD&&e.pointerId===cfD.id)cfStop();});
+  addEventListener('pointercancel',e=>{if(cfD&&e.pointerId===cfD.id&&!cfActif)cfStop();});
+  addEventListener('touchend',e=>{if(cfD&&!e.touches.length)cfStop();});
+  addEventListener('touchcancel',()=>{if(cfD)cfStop();});
+  /* Après le compte-fils, lever le doigt n'agrandit pas la vue */
+  g.addEventListener('click',e=>{if(cfActif||performance.now()-cfQuitte<450){e.stopPropagation();e.preventDefault();}},true);
+}
 /* Regarder une vue à l'agrandisseur : elle sera entourée au crayon gras en revenant à la planche */
 function marquer(P){const l=lireChoix();if(!l.includes(P.id)){l.push(P.id);sauverChoix(l);vis.nouvelles.push(P.id);}}
 function ouvrirVis(P){
@@ -793,7 +870,7 @@ const types={
       P.t+=dt;
       if(P.t>SEUIL_VOYANT&&!P.clic)P.inter.classList.add('visible');
       /* L'œil s'habitue : on devine des formes ; la lampe montre le labo ; on s'approche de la cuvette */
-      const avant=.07*lisse(clamp((P.t-.9)/2)),u=P.clic?P.t-P.tLampe:-1;
+      const avant=.07*lisse(clamp((P.t-.9)/4)),u=P.clic?P.t-P.tLampe:-1;
       /* Une fois la lampe allumée, on voit le tourne-disque : on propose un disque (sauf s'il tourne déjà, ou si l'on a dit non) */
       if(P.clic&&!P.demande&&u>1){
         P.demande=true;
@@ -809,7 +886,7 @@ const types={
     },
     lampe(P){return P.clic?AMBIANCE:0;},
     son(){return [1,0,.8];},
-    consigne(P){if(P.clic)return '';if(P.t>2.6)return 'Allumer la lampe';return P.t>.8?'Laisser l’œil s’habituer au noir':'';},
+    consigne(P){if(P.clic)return '';if(P.t>SEUIL_ALLUMER)return 'Allumer la lampe';return P.t>.8&&P.t<SEUIL_OEIL?'Laisser l’œil s’habituer au noir':'';},
     up(P){}
   },
   texte:{
