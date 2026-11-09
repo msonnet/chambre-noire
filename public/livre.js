@@ -417,7 +417,7 @@ const mix=(a,b,k)=>a.map((v,j)=>Math.round(v+(b[j]-v)*k));
 const rgb=c=>'rgb('+c.join(',')+')';
 const clamp=(v,a=0,b=1)=>Math.min(b,Math.max(a,v));
 const lisse=t=>t*t*(3-2*t);
-const vus={texte:false,dessin:false,suite:false};
+const vus={texte:false,dessin:false,suite:false,agrandi:false,loupe:false};
 const vis={ouverte:false,liste:[],i:0,nouvelles:[]};
 /* Une seule toile de travail pour tous les dessins (la mémoire des téléphones est comptée) */
 const TM=document.createElement('canvas'),TX=TM.getContext('2d');
@@ -678,7 +678,7 @@ function cfOuvrir(){
   const g=$('grille'),c=g.cloneNode(true);c.removeAttribute('id');c.style.width=g.offsetWidth+'px';
   c.querySelectorAll('button').forEach(b=>{b.tabIndex=-1;b.removeAttribute('aria-label');});
   c.querySelectorAll('.crayon.trace').forEach(e=>e.classList.remove('trace'));
-  cfVue.replaceChildren(c);cfActif=true;cf.classList.add('visible');
+  cfVue.replaceChildren(c);cfActif=true;vus.loupe=true;cf.classList.add('visible');
 }
 function cfPlacer(x,y){
   const r=$('grille').getBoundingClientRect(),S=cf.parentElement.getBoundingClientRect(),R=cf.offsetWidth/2;
@@ -709,7 +709,7 @@ function cfStop(){clearTimeout(cfT);cfD=null;if(cfActif){cfActif=false;cfQuitte=
 function marquer(P){const l=lireChoix();if(!l.includes(P.id)){l.push(P.id);sauverChoix(l);vis.nouvelles.push(P.id);}}
 function ouvrirVis(P){
   vis.liste=planches.filter(Q=>estTirage(Q)&&Q.fixe);vis.i=Math.max(0,vis.liste.indexOf(P));vis.nouvelles=[];
-  vis.ouverte=true;visEl.classList.add('ouverte');afficherVis();SON.feuille();
+  vis.ouverte=true;vus.agrandi=true;visEl.classList.add('ouverte');afficherVis();SON.feuille();
   try{$('vis-fermer').focus({preventScroll:true});}catch(_){}
 }
 function afficherVis(){
@@ -1029,7 +1029,16 @@ const types={
     },
     lampe(P){return P.etape==='rincer'||P.etape==='rince'||P.etape==='porte'||(P.etape==='ouvre'&&P.t<.1)?AMBIANCE:0;},
     son(P){return P.etape==='dehors'||(P.etape==='ouvre'&&P.t>1.4)?[0,1,.9]:[1,0,.8];},
-    consigne(P){return P.etape==='rincer'?'Ouvrir le robinet pour rincer les tirages':P.etape==='porte'?'Pousser la porte':'';},
+    /* Sur la paillasse, les gestes en consigne discrète (une fois chacun), effacée dès qu'on fait défiler */
+    consigne(P){
+      if(P.etape==='dehors'){
+        if(vis.ouverte||P.dehors.scrollTop>24)return '';
+        if(!vus.agrandi)return 'Toucher une vue pour l’agrandir';
+        if(!vus.loupe)return 'Garder le doigt sur la planche pour le compte-fils';
+        return '';
+      }
+      return P.etape==='rincer'?'Ouvrir le robinet pour rincer les tirages':P.etape==='porte'?'Pousser la porte':'';
+    },
     glisse(P,dx){if(vis.ouverte)visNav(dx<0?1:-1);}
   }
 };
@@ -1176,6 +1185,8 @@ $('sortir').addEventListener('click',sortirMaintenant);
 btnP.addEventListener('click',precedent);
 revoir.addEventListener('click',()=>{const s=planches.length-1;planches[s].direct=true;montrer(s);});
 $('rentrer').addEventListener('click',()=>rentrer());
+/* Les crédits, rangés : quand on les ouvre, on les fait venir à l'écran */
+$('credits').addEventListener('toggle',e=>{const d=e.currentTarget;if(d.open)setTimeout(()=>d.scrollIntoView({block:'start',behavior:reduit?'auto':'smooth'}),30);});
 $('effacer').addEventListener('click',()=>{
   oublier();
   planches.forEach(P=>{P.fixe=false;types[P.kind].init&&types[P.kind].init(P);});
@@ -1221,6 +1232,9 @@ function boucle(t){
   SON.scene(s[0],s[1],s[2],s[3]);SON.tick();
   if((++tourPl)%20===0)majPlatine();
   const c=U.consigne?U.consigne(Q):'';
+  const jour=Q.kind==='sortie'&&Q.etape==='dehors';consigne.classList.toggle('jour',jour);
+  /* Petit écran : la consigne passerait sur les liens ; un voile de paillasse la détache */
+  consigne.classList.toggle('voile',jour&&!!c&&$('credits').getBoundingClientRect().bottom>innerHeight-100);
   if(c!==dernier){dernier=c;if(c){consigne.textContent=c;consigne.style.opacity=1;}else consigne.style.opacity=0;}
   requestAnimationFrame(boucle);
 }

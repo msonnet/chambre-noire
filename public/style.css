@@ -160,6 +160,12 @@ svg.labo{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:
 .lien:focus-visible{outline:1px solid #ece6da;outline-offset:4px}
 .mentions{position:relative;margin:2.6em 0 0;font-size:11px;line-height:1.5;color:#a29c91}
 .mentions p{margin:0 0 .8em}
+.credits summary{display:inline-block;list-style:none;cursor:pointer;color:#aaa498;border-bottom:1px solid rgba(236,230,218,.2);padding:.2em 0;margin:.2em 0 0;-webkit-tap-highlight-color:transparent}
+.credits summary::-webkit-details-marker{display:none}
+.credits summary:focus-visible{outline:1px solid #ece6da;outline-offset:4px}
+.credits[open] summary{margin-bottom:1em}
+#consigne.jour{color:#d4cec3;text-shadow:0 1px 3px rgba(0,0,0,.55)}
+#consigne.voile{padding-top:14px;padding-bottom:14px;bottom:calc(max(30px,4.5vh) + var(--bas) - 14px);background:linear-gradient(to bottom,rgba(66,63,58,0),rgba(66,63,58,.94) 30%,rgba(66,63,58,.94) 70%,rgba(66,63,58,0))}
 .visionneuse{position:absolute;inset:0;background:var(--papier);display:none;touch-action:none;z-index:4}
 .visionneuse.ouverte{display:block}
 .visionneuse.noire{background:var(--noir)}
