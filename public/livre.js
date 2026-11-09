@@ -1035,6 +1035,8 @@ function echelleSas(P){
   const placer=(el,y0,h)=>{el.setAttribute('viewBox',x0+' '+y0+' '+2*d+' '+h);
     Object.assign(el.style,{left:x0+'px',top:y0+'px',width:2*d+'px',height:h+'px',transformOrigin:(PO.ox-x0)+'px '+(PO.oy-y0)+'px'});};
   placer(P.mur,-24,892);placer(P.piece,100,1220);placer(P.banc,380,700);
+  /* ce qu'on voit du dessin, en coordonnées du dessin (centré sur 195, 422) */
+  P.vis={w:r.width/s,h:r.height/s};
 }
 /* L'état de la porte : th (degrés), poignee (0 à 1), nuit (la lampe éteinte), voyant ;
    puis la marche : d (de combien l'œil a avancé vers la porte), bx, by (la tête qui se balance à chaque pas), marche (0 à 1) */
@@ -1046,6 +1048,12 @@ function porteEtat(P,e){
   P.mur.style.transform=d?'scale('+(f/(f-d)).toFixed(4)+')':'';
   P.piece.style.transform=d?'scale('+((f+PO.fond)/(f+PO.fond-d)).toFixed(4)+')':'';
   P.banc.style.transform=d?'scale('+((f+PO.banc)/(f+PO.banc-d)).toFixed(4)+')':'';
+  /* Passé un certain point, le mur et le chambranle sont sortis de l'image de tous côtés : on ne les calcule plus
+     (le fondu vers la planche-contact en est plus léger pour le téléphone) */
+  const k=f/(f-d),v=P.vis,m=12;
+  const dehors=!!(d&&v&&PO.ox+(PO.x-PO.ox)*k<195-v.w/2-m&&PO.ox+(PO.x+PO.l-PO.ox)*k>195+v.w/2+m
+    &&PO.oy+(PO.y-PO.oy)*k<422-v.h/2-m&&PO.oy+(PO.y+PO.h-PO.oy)*k>422+v.h/2+m);
+  if(dehors!==P.murCache){P.murCache=dehors;P.mur.style.visibility=dehors?'hidden':'';}
   P.vue.style.transform=(e.bx||e.by)?'translate('+(e.bx||0).toFixed(2)+'px,'+(e.by||0).toFixed(2)+'px)':'';
   po.poignee.setAttribute('transform','rotate('+(-28*(e.poignee||0)).toFixed(2)+' 179.5 298)');
   const n=(e.nuit||0)*(1-.35*lum);
