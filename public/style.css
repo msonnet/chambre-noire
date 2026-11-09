@@ -59,9 +59,13 @@ body{position:fixed;inset:0}
 canvas.expo{position:absolute;inset:0;width:100%;height:100%;display:block}
 /* La feuille dans la cuvette, derrière le poème */
 .papier .planche[data-kind="texte"] .page::before{content:'';position:absolute;left:var(--bord-feuille);right:var(--bord-feuille);top:calc(max(12vh,64px) + var(--haut) - 36px);bottom:calc(84px + var(--bas));background:var(--feuille,#321b18);z-index:-1}
-.papier .planche[data-kind="texte"] .page.serree::before{top:calc(max(6vh,40px) + var(--haut) - 24px)}
-.papier .planche[data-kind="texte"] .page.tres-serree::before{top:calc(14px + var(--haut));bottom:calc(72px + var(--bas))}
-.papier .planche[data-kind="texte"] .page.epi::before{top:calc(48px + var(--haut))}
+/* Le papier perlé du tirage : son grain se révèle avec l'image (rien sur la feuille vierge dans le bain), entier à la lumière (--grain-papier) */
+.papier .planche[data-kind="texte"] .page::after{content:'';position:absolute;left:var(--bord-feuille);right:var(--bord-feuille);top:calc(max(12vh,64px) + var(--haut) - 36px);bottom:calc(84px + var(--bas));background:url(img/papier-perle.webp) 0 0/256px 256px;mix-blend-mode:soft-light;opacity:var(--grain-papier,0);z-index:-1;pointer-events:none}
+/* Le grain argentique dans les lettres, comme sur un vrai tirage, et le léger flou du papier (seulement une fois le développement commencé : la feuille vierge reste lisse) */
+.papier .planche[data-kind="texte"].revele .v,.papier .planche[data-kind="texte"].revele .num,.tirage .v,.tirage .num{-webkit-mask-image:url(img/grain-argentique.webp);mask-image:url(img/grain-argentique.webp);-webkit-mask-size:128px 128px;mask-size:128px 128px;text-shadow:0 0 .6px currentColor}
+.papier .planche[data-kind="texte"] .page.serree::before,.papier .planche[data-kind="texte"] .page.serree::after{top:calc(max(6vh,40px) + var(--haut) - 24px)}
+.papier .planche[data-kind="texte"] .page.tres-serree::before,.papier .planche[data-kind="texte"] .page.tres-serree::after{top:calc(14px + var(--haut));bottom:calc(72px + var(--bas))}
+.papier .planche[data-kind="texte"] .page.epi::before,.papier .planche[data-kind="texte"] .page.epi::after{top:calc(48px + var(--haut))}
 /* Le labo vu depuis la porte, sous la lampe rouge ; les tirages se balancent doucement sur la corde à linge */
 svg.labo{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:0;transform-origin:43% 80%;filter:blur(.4px)}
 .labo .seche{transform-box:view-box;animation:balance 5s ease-in-out infinite alternate}
@@ -108,6 +112,7 @@ svg.labo{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:
 .sas .cadre{position:absolute;left:50%;top:50%;width:390px;height:844px;margin:-422px 0 0 -195px}
 .sas .vue{position:absolute;inset:0}
 .sas .piece{position:absolute;z-index:1}
+.sas .banc{position:absolute;z-index:1;overflow:visible}
 /* L'éblouissement de la pièce claire, au sortir du noir : un voile blanc qui s'efface à mesure que l'œil s'y fait */
 .sas .voile{position:absolute;left:-500px;right:-500px;top:-200px;bottom:-500px;z-index:1;background:#fbf8f2;opacity:.9}
 .sas .gond{position:absolute;inset:0;z-index:2;perspective:700px;perspective-origin:195px 470px}
@@ -118,7 +123,7 @@ svg.labo{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:
 .sas .ombre{background:#030101}
 .sas .mur{position:absolute;z-index:3}
 /* Pendant qu'on passe la porte, chaque plan bouge à sa vitesse : on les garde prêts à glisser */
-.sas.marche .mur,.sas.marche .piece,.sas.marche .vue{will-change:transform}
+.sas.marche .mur,.sas.marche .piece,.sas.marche .banc,.sas.marche .vue{will-change:transform}
 .sas .blanc{position:absolute;inset:0;background:#f4f0e8;opacity:0}
 
 /* En sortant, sur le tourne-disque de l'image du labo : lever l'aiguille */
@@ -162,7 +167,7 @@ svg.labo{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:
 .vue button{font:inherit;position:absolute;inset:0;display:block;width:100%;border:0;padding:0;margin:0;background:none;cursor:pointer;border-radius:0;-webkit-tap-highlight-color:transparent}
 /* La vue : 24×36 au milieu de la bande, coins arrondis par la fenêtre de l'appareil, un peu de vignettage */
 .vue .image{position:absolute;left:15.714%;width:68.571%;top:2.632%;height:94.737%;overflow:hidden;background:#171513;border-radius:calc(.45*var(--mm))}
-.vue.dev.texte .image{background:#e2ded4}
+.vue.dev.texte .image{background:#e2ded4 url(img/papier-perle.webp) 0 0/96px 96px;background-blend-mode:soft-light}
 .vue.dev.dessin .image{background:#0f0e0d}
 .vue.dev .image::after{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 80% 72% at 50% 50%,transparent 50%,rgba(24,16,12,.26) 100%)}
 .vue .mini{text-align:left;position:absolute;left:0;top:0;width:480px;height:720px;transform-origin:0 0;pointer-events:none}
@@ -209,6 +214,7 @@ svg.labo{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:
 #consigne.voile{padding-top:14px;padding-bottom:14px;bottom:calc(max(30px,4.5vh) + var(--bas) - 14px);background:linear-gradient(to bottom,rgba(66,63,58,0),rgba(66,63,58,.94) 30%,rgba(66,63,58,.94) 70%,rgba(66,63,58,0))}
 .visionneuse{position:absolute;inset:0;background:var(--papier);display:none;touch-action:none;z-index:4}
 .visionneuse.ouverte{display:block}
+.visionneuse:not(.noire){background-image:url(img/papier-perle.webp);background-size:256px 256px;background-blend-mode:soft-light}
 .visionneuse.noire{background:var(--noir)}
 .tirage{position:absolute;inset:0}
 .tirage .v,.tirage .num{color:var(--encre)}

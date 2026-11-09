@@ -494,6 +494,9 @@ function peindreTexte(P){
        une fois fixé, on allume la lumière blanche pour regarder le tirage */
     const fond=mix(mix(FEUILLE_FAIBLE,FEUILLE_LAMPE,lisse(P.eclair||0)),FEUILLE_JOUR,b);
     P.el.style.setProperty('--feuille',rgb(fond));
+    /* le grain du papier vient avec l'image, puis tout entier à la lumière */
+    P.el.style.setProperty('--grain-papier',(.35*lisse(clamp(P.prog))+.65*b).toFixed(3));
+    P.el.classList.toggle('revele',P.prog>0||b>0);
     P.lignes.forEach((e,j)=>{const k=lisse(clamp((P.prog-.15-P.delais[j])/.55));e.style.color=rgb(mix(mix(fond,ENCRE_LABO,k),ENCRE_JOUR,b));});
     const f=lisse(P.fin);
     P.apres.forEach(e=>{e.style.color=rgb(mix(fond,ENCRE_JOUR,f));});
@@ -884,7 +887,7 @@ function decor(P){
    sur le chambranle, béquille et cylindre, plaque de propreté, un tablier en caoutchouc pendu à une patère ; à droite,
    l'interrupteur de la lampe et son voyant. Derrière la porte, la pièce claire du labo, où attend la planche-contact.
    Coordonnées du dessin : 390 × 844 ; le battant (PO) tourne sur ses gonds, à gauche, sous une perspective de PO.f. */
-const PO={x:92,y:168,l:206,h:574,f:700,ox:195,oy:470,fond:1100};
+const PO={x:92,y:168,l:206,h:574,f:700,ox:195,oy:470,fond:1100,banc:200};
 /* Où l'on voit le chant du battant (côté serrure) quand il a tourné de th radians */
 function chant(th){
   const k=PO.f/(PO.f+PO.l*Math.sin(th)),x=PO.x+PO.l*Math.cos(th);
@@ -911,8 +914,7 @@ function porteLabo(P){
   <rect x="-170" y="505" width="404" height="7.5" fill="#5f5b55"/>
   <path d="M-170 512.5H232M-70 514V584M30 514V584M130 514V584" stroke="#2e2c29" stroke-width="1"/>
   <path d="M-80 524v14M20 524v14M120 524v14M220 524v14" stroke="#8a867e" stroke-width="1.6" stroke-linecap="round"/>
-  <polygon points="122,506.5 174,505.6 176,510.6 123,511.4" fill="#f7f4ef"/>
-  <path d="M184 509.4l15 -1.1" stroke="#b52c1c" stroke-width="1.5" stroke-linecap="round"/>
+  <rect x="-120" y="497" width="34" height="8" fill="#6b6760"/><rect x="-80" y="499" width="30" height="6" fill="#77736b"/>
   <!-- l'armoire de séchage -->
   <rect x="300" y="318" width="112" height="266" fill="#d3ccbf" stroke="#aaa294" stroke-width="1"/>
   <path d="M356 320V582" stroke="#aaa294" stroke-width="1"/><path d="M349 436v24M363 436v24" stroke="#8d867a" stroke-width="2" stroke-linecap="round"/>
@@ -997,8 +999,30 @@ function porteLabo(P){
   <polygon class="po-flaque" points="0,0" fill="url(#po-flaque-g)" filter="url(#po-flou-sol)" opacity="0"/>
   <path class="po-bord" d="M298.6 168V742" stroke="#fff4e2" stroke-width="1.6" opacity="0"/>
   <ellipse class="po-lueur" cx="250" cy="455" rx="230" ry="360" fill="url(#po-lueur-g)" opacity="0"/>`;
+  /* La paillasse du milieu de la pièce, plus proche : la même résine sombre que sous la planche-contact ; la planche y est posée,
+     avec la pince en bambou et le crayon gras. En fin de marche, elle remplit le bas de l'image : le fondu passe d'une paillasse à l'autre. */
+  P.sas.querySelector('.banc').innerHTML=`<defs>
+    <linearGradient id="po-resine" x1="0" y1="500" x2="0" y2="575" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#55524c"/><stop offset="1" stop-color="#4a4742"/></linearGradient>
+    <radialGradient id="po-resine-reflet" cx="195" cy="520" r="120" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fffaf0" stop-opacity=".1"/><stop offset="1" stop-color="#fffaf0" stop-opacity="0"/></radialGradient>
+    <linearGradient id="po-face" x1="0" y1="576" x2="0" y2="700" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#3b3935"/><stop offset="1" stop-color="#2c2a27"/></linearGradient>
+    <linearGradient id="po-ombre-sol" x1="0" y1="700" x2="0" y2="716" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#5c574e" stop-opacity=".7"/><stop offset="1" stop-color="#5c574e" stop-opacity="0"/></linearGradient>
+  </defs>
+  <rect x="34" y="700" width="322" height="16" fill="url(#po-ombre-sol)"/>
+  <rect x="40" y="576" width="310" height="124" fill="url(#po-face)"/>
+  <path d="M118 580V696M195 580V696M272 580V696" stroke="#24221f" stroke-width="1.2"/>
+  <path d="M110 596v16M126 596v16M187 596v16M203 596v16M264 596v16M280 596v16" stroke="#77736b" stroke-width="1.6" stroke-linecap="round"/>
+  <polygon points="78,500 312,500 350,576 40,576" fill="url(#po-resine)"/>
+  <polygon points="78,500 312,500 350,576 40,576" fill="url(#po-resine-reflet)"/>
+  <path d="M40 576.5H350" stroke="#77736b" stroke-width="1.2"/><path d="M78 500.5H312" stroke="#3a3834" stroke-width=".8"/>
+  <!-- la planche-contact, à plat sur la paillasse -->
+  <polygon points="153,512 239,512 249,557 141,557" fill="#0f0e0d"/>
+  <path d="M165 514L156.6 555M177.3 514L170.9 555M189.7 514L185.3 555M202 514L199.7 555M214.3 514L214 555M226.7 514L228.4 555" stroke="#2c2a27" stroke-width=".7"/>
+  <path d="M153 512H239" stroke="#3a3632" stroke-width=".6"/>
+  <!-- la pince en bambou et le crayon gras rouge -->
+  <path d="M262 509L296 526M264 507L299 523" stroke="#c9a46a" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M98 567L139 560" stroke="#b52c1c" stroke-width="3.2" stroke-linecap="round"/><path d="M98 567l-4 .8" stroke="#7a170e" stroke-width="2.6" stroke-linecap="round"/>`;
   P.vue=P.sas.querySelector('.vue');P.cadre=P.sas.querySelector('.cadre');P.battant=P.sas.querySelector('.battant');
-  P.mur=P.sas.querySelector('.mur');P.piece=P.sas.querySelector('.piece');
+  P.mur=P.sas.querySelector('.mur');P.piece=P.sas.querySelector('.piece');P.banc=P.sas.querySelector('.banc');
   P.jour=P.sas.querySelector('.jour');P.ombre=P.sas.querySelector('.ombre');P.blanc=P.sas.querySelector('.blanc');
   const q=c=>P.sas.querySelector('.'+c);
   P.po={poignee:q('po-poignee'),nuit:q('po-nuit'),voyant:q('po-voyant'),flaque:q('po-flaque'),bord:q('po-bord'),lueur:q('po-lueur')};P.voile=P.sas.querySelector('.voile');
@@ -1011,7 +1035,7 @@ function echelleSas(P){
   const d=Math.ceil(Math.max(195,r.width/s/2)+24),x0=195-d;
   const placer=(el,y0,h)=>{el.setAttribute('viewBox',x0+' '+y0+' '+2*d+' '+h);
     Object.assign(el.style,{left:x0+'px',top:y0+'px',width:2*d+'px',height:h+'px',transformOrigin:(PO.ox-x0)+'px '+(PO.oy-y0)+'px'});};
-  placer(P.mur,-24,892);placer(P.piece,100,1220);
+  placer(P.mur,-24,892);placer(P.piece,100,1220);placer(P.banc,380,700);
 }
 /* L'état de la porte : th (degrés), poignee (0 à 1), nuit (la lampe éteinte), voyant ;
    puis la marche : d (de combien l'œil a avancé vers la porte), bx, by (la tête qui se balance à chaque pas), marche (0 à 1) */
@@ -1022,6 +1046,7 @@ function porteEtat(P,e){
   P.battant.style.transform=(d?'translateZ('+d.toFixed(2)+'px) ':'')+(th?'rotateY('+th.toFixed(3)+'deg)':'');
   P.mur.style.transform=d?'scale('+(f/(f-d)).toFixed(4)+')':'';
   P.piece.style.transform=d?'scale('+((f+PO.fond)/(f+PO.fond-d)).toFixed(4)+')':'';
+  P.banc.style.transform=d?'scale('+((f+PO.banc)/(f+PO.banc-d)).toFixed(4)+')':'';
   P.vue.style.transform=(e.bx||e.by)?'translate('+(e.bx||0).toFixed(2)+'px,'+(e.by||0).toFixed(2)+'px)':'';
   po.poignee.setAttribute('transform','rotate('+(-28*(e.poignee||0)).toFixed(2)+' 179.5 298)');
   const n=(e.nuit||0)*(1-.35*lum);
