@@ -5,7 +5,7 @@ function creerSon(){
   const NOMS=['obturateur','pas','coups','portes','ventilation','interrupteur','gouttes','bain','papier','pince','rincage','feuilles','dehors','platine','craquement','sillon','batiment','pincettes'];
   const CLE_SON='chambre-noire-son';
   /* Volumes (0 à 1) : les réglages principaux */
-  const VOL={ventilation:.07,dehors:.3,pas:.6,coup:.7,porte:.62,porteDouce:.5,interrupteur:.42,goutte:.18,bain:.55,egoutte:.13,
+  const VOL={ventilation:.035,dehors:.3,pas:.6,coup:.7,porte:.62,porteDouce:.5,interrupteur:.42,goutte:.18,bain:.55,egoutte:.13,
     obturateur:.55,papier:.5,pince:.42,rincage:.45,feuille:.3,
     musique:.16,craquement:.2,sillon:.2,platine:.32,batiment:.2,pincettes:.32};
   let actif=true;try{actif=localStorage.getItem(CLE_SON)!=='0';}catch(_){}
@@ -869,6 +869,161 @@ function decor(P){
   <rect width="390" height="844" fill="url(#ombre)"/>`).replace(/id="([a-z-]+)"/g,'id="'+pre+'-$1"').replace(/url\(#([a-z-]+)\)/g,'url(#'+pre+'-$1)');
 }
 
+/* La porte du labo, vue de l'intérieur sous la lampe rouge : une porte isoplane peinte en noir, joint d'étanchéité à la lumière
+   sur le chambranle, béquille et cylindre, plaque de propreté, un tablier en caoutchouc pendu à une patère ; à droite,
+   l'interrupteur de la lampe et son voyant. Derrière la porte, la pièce claire du labo, où attend la planche-contact.
+   Coordonnées du dessin : 390 × 844 ; le battant (PO) tourne sur ses gonds, à gauche, sous une perspective de PO.f. */
+const PO={x:92,y:168,l:206,h:574,f:700,ox:195,oy:470};
+/* Où l'on voit le chant du battant (côté serrure) quand il a tourné de th radians */
+function chant(th){
+  const k=PO.f/(PO.f+PO.l*Math.sin(th)),x=PO.x+PO.l*Math.cos(th);
+  return{x:PO.ox+(x-PO.ox)*k,haut:PO.oy+(PO.y-PO.oy)*k,bas:PO.oy+(PO.y+PO.h-PO.oy)*k};
+}
+function porteLabo(P){
+  const g=grain(),gr=id=>`<pattern id="${id}" width="128" height="128" patternUnits="userSpaceOnUse"><image href="${g}" width="128" height="128"/></pattern>`;
+  /* La pièce claire, derrière la porte : le mur du fond, le sol, la paillasse où attend la planche-contact */
+  P.sas.querySelector('.piece').innerHTML=`<defs>
+    <linearGradient id="po-fond" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4f0e8"/><stop offset=".55" stop-color="#e2dccf"/><stop offset="1" stop-color="#d2cbbd"/></linearGradient>
+    <linearGradient id="po-sol-clair" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b9b2a4"/><stop offset="1" stop-color="#ddd6c8"/></linearGradient>
+    <radialGradient id="po-plafonnier" cx="111" cy="10" r="150" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="222" height="590" fill="url(#po-fond)"/>
+  <rect width="222" height="200" fill="url(#po-plafonnier)"/>
+  <rect y="430" width="222" height="160" fill="url(#po-sol-clair)"/>
+  <rect y="424" width="222" height="6" fill="#a39b8e"/>
+  <rect x="-4" y="352" width="152" height="72" fill="#4a4742"/>
+  <rect x="-4" y="345" width="154" height="7.5" fill="#5f5b55"/>
+  <path d="M-4 352.5H150" stroke="#2e2c29" stroke-width="1"/>
+  <polygon points="38,346.5 90,345.6 92,350.6 39,351.4" fill="#f7f4ef"/>
+  <path d="M100 349.4l15 -1.1" stroke="#b52c1c" stroke-width="1.5" stroke-linecap="round"/>
+  <rect class="po-voile" width="222" height="590" fill="#fbf8f2" opacity=".9"/>`;
+  /* Le battant, côté labo */
+  P.sas.querySelector('.battant svg').innerHTML=`<defs>
+    <linearGradient id="po-peint" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d140e"/><stop offset=".38" stop-color="#2a0d09"/><stop offset="1" stop-color="#130605"/></linearGradient>
+    <radialGradient id="po-reflet" cx="96" cy="30" r="320" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#8a2a1c" stop-opacity=".32"/><stop offset="1" stop-color="#8a2a1c" stop-opacity="0"/></radialGradient>
+    <linearGradient id="po-inox" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3e1410"/><stop offset=".5" stop-color="#2a0c09"/><stop offset="1" stop-color="#170606"/></linearGradient>
+    <linearGradient id="po-bords" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#030101" stop-opacity=".55"/><stop offset=".05" stop-color="#030101" stop-opacity="0"/><stop offset=".95" stop-color="#030101" stop-opacity="0"/><stop offset="1" stop-color="#030101" stop-opacity=".5"/></linearGradient>
+    <linearGradient id="po-linteau" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#030101" stop-opacity=".6"/><stop offset=".03" stop-color="#030101" stop-opacity="0"/></linearGradient>
+    <linearGradient id="po-levier" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d07a60"/><stop offset=".42" stop-color="#7e2c1f"/><stop offset="1" stop-color="#260b08"/></linearGradient>
+    <linearGradient id="po-tablier" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#140504"/><stop offset=".3" stop-color="#2c0c08"/><stop offset=".55" stop-color="#0e0403"/><stop offset=".8" stop-color="#240a07"/><stop offset="1" stop-color="#0c0303"/></linearGradient>
+    ${gr('po-grain-b')}
+  </defs>
+  <rect width="206" height="574" fill="url(#po-peint)"/>
+  <rect width="206" height="574" fill="url(#po-reflet)"/>
+  <rect width="206" height="574" fill="url(#po-grain-b)" opacity=".05"/>
+  <rect width="206" height="574" fill="url(#po-bords)"/><rect width="206" height="574" fill="url(#po-linteau)"/>
+  <path d="M.5 0V574M205.5 0V574" stroke="#050202" stroke-width="1" opacity=".7"/>
+  <!-- la patère et le tablier en caoutchouc -->
+  <path d="M33 150Q37 119 54 118Q71 119 75 150" stroke="#0a0302" stroke-width="3.2" fill="none"/>
+  <path d="M33 150Q37 120 54 119.5" stroke="#5a1a12" stroke-width=".7" fill="none" opacity=".6"/>
+  <rect x="49" y="104" width="10" height="9" rx="2" fill="#2a0c08" stroke="#7a2a1d" stroke-width=".5"/>
+  <path d="M54 110v7q0 5 5 5h2" stroke="#9a4434" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+  <path d="M31 149L77 149Q80 171 94 187Q99 262 92 362Q62 371 29 364Q16 272 21 189Q29 173 31 149Z" fill="url(#po-tablier)"/>
+  <path d="M43 158Q38 252 45 358" stroke="#5a1a12" stroke-width="2.4" opacity=".45" fill="none"/>
+  <path d="M67 160Q74 252 71 362" stroke="#4a160f" stroke-width="1.6" opacity=".5" fill="none"/>
+  <path d="M23 196Q20 272 30 358" stroke="#7a2418" stroke-width="1" opacity=".45" fill="none"/>
+  <path d="M21 191Q12 232 17 296M94 189Q103 229 97 286" stroke="#0a0302" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+  <path d="M29 364Q62 371 92 362" stroke="#5a1a12" stroke-width=".8" opacity=".5" fill="none"/>
+  <!-- la plaque de propreté -->
+  <rect x="6" y="502" width="194" height="66" fill="url(#po-inox)"/>
+  <path d="M6 502.5H200" stroke="#8a3a2c" stroke-width=".7" opacity=".5"/><path d="M6 567.5H200" stroke="#050202" stroke-width="1" opacity=".6"/>
+  <path d="M6 510H200M6 518H200M6 529H200M6 541H200M6 552H200M6 561H200" stroke="#5a1a12" stroke-width=".3" opacity=".5"/>
+  <g fill="#6a2418"><circle cx="12" cy="508" r="1.3"/><circle cx="194" cy="508" r="1.3"/><circle cx="12" cy="562" r="1.3"/><circle cx="194" cy="562" r="1.3"/></g>
+  <!-- la serrure : rosace, cylindre, béquille -->
+  <rect x="172" y="282" width="15" height="56" rx="7.5" fill="#2c0d09" stroke="#8a3a2c" stroke-width=".7"/>
+  <circle cx="179.5" cy="324" r="3.8" fill="#120504" stroke="#9a4434" stroke-width=".6"/><rect x="179" y="321.4" width="1.1" height="5.2" fill="#5a1a12"/>
+  <path d="M178 306H142" stroke="#000" stroke-width="3" opacity=".3" stroke-linecap="round"/>
+  <g class="po-poignee">
+    <path d="M181 293.5H142Q135.5 293.5 135.5 298.5Q135.5 303 141 303H181Z" fill="url(#po-levier)"/>
+    <circle cx="179.5" cy="298" r="6" fill="url(#po-levier)" stroke="#260b08" stroke-width=".5"/>
+    <path d="M177 295H143" stroke="#f0b098" stroke-width=".8" opacity=".55" stroke-linecap="round"/>
+  </g>`;
+  /* Le mur du labo, le chambranle et son joint, le seuil, l'interrupteur ; puis la nuit quand la lampe s'éteint,
+     et la lumière de la pièce claire qui entre par la porte */
+  P.sas.querySelector('.mur').innerHTML=`<defs>
+    <clipPath id="po-trou"><path clip-rule="evenodd" d="M-700 -400H1090V1244H-700Z M92 168V742H298V168Z"/></clipPath>
+    <radialGradient id="po-halo" cx="195" cy="30" r="640" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#b8261a" stop-opacity=".44"/><stop offset=".45" stop-color="#6a140d" stop-opacity=".18"/><stop offset="1" stop-color="#2a0705" stop-opacity="0"/></radialGradient>
+    <linearGradient id="po-sol" x1="0" y1="742" x2="0" y2="920" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#1e0907"/><stop offset="1" stop-color="#070303"/></linearGradient>
+    <radialGradient id="po-vignette" cx="195" cy="455" r="560" gradientUnits="userSpaceOnUse"><stop offset=".52" stop-color="#060202" stop-opacity="0"/><stop offset="1" stop-color="#060202" stop-opacity=".96"/></radialGradient>
+    <linearGradient id="po-flaque-g" x1="0" y1="742" x2="0" y2="1010" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#f6f0e4" stop-opacity=".55"/><stop offset=".45" stop-color="#f6f0e4" stop-opacity=".12"/><stop offset="1" stop-color="#f6f0e4" stop-opacity="0"/></linearGradient>
+    <radialGradient id="po-lueur-g"><stop offset="0" stop-color="#fffaf0" stop-opacity=".55"/><stop offset=".5" stop-color="#fffaf0" stop-opacity=".12"/><stop offset="1" stop-color="#fffaf0" stop-opacity="0"/></radialGradient>
+    <filter id="po-flou" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3"/></filter>
+    <filter id="po-flou-sol" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="5"/></filter>
+    ${gr('po-grain-m')}
+  </defs>
+  <g clip-path="url(#po-trou)">
+    <rect x="-700" y="-400" width="1790" height="1644" fill="#0e0606"/>
+    <rect x="-700" y="-400" width="1790" height="1644" fill="url(#po-halo)"/>
+    <rect x="-700" y="742" width="1790" height="502" fill="url(#po-sol)"/>
+    <rect x="-700" y="727" width="1790" height="15" fill="#160706"/>
+    <path d="M-700 727.5H1090" stroke="#4a160f" stroke-width=".8" opacity=".55"/>
+    <!-- le chambranle -->
+    <path d="M68 742V144H322V742H298V168H92V742Z" fill="#230c08"/>
+    <path d="M68.5 742V144.5H321.5V742" stroke="#6a2418" stroke-width=".9" fill="none" opacity=".55"/>
+    <path d="M74 742V150H316V742" stroke="#3a120d" stroke-width=".6" fill="none" opacity=".7"/>
+    <path d="M68 144H322" stroke="#8a2a1c" stroke-width="1.2" opacity=".35"/>
+    <!-- le joint noir qui arrête la lumière -->
+    <path d="M89.5 742V165.5H300.5V742" stroke="#040101" stroke-width="5" fill="none"/>
+    <!-- le seuil -->
+    <rect x="86" y="740" width="218" height="7" fill="#2a0d09"/><path d="M86 740.5H304" stroke="#8a3a2c" stroke-width=".7" opacity=".5"/>
+    <!-- l'interrupteur de la lampe -->
+    <rect x="329" y="444" width="22" height="34" rx="3" fill="#1a0807" stroke="#5c1a12" stroke-width=".6"/>
+    <rect x="336.5" y="454" width="7" height="15" rx="1.2" fill="#2a0d09" stroke="#7a2a1d" stroke-width=".5"/>
+    <rect x="-700" y="-400" width="1790" height="1644" fill="url(#po-grain-m)" opacity=".08"/>
+    <rect x="-700" y="-400" width="1790" height="1644" fill="url(#po-vignette)"/>
+    <rect class="po-nuit" x="-700" y="-400" width="1790" height="1644" fill="#030101" opacity="0"/>
+  </g>
+  <g class="po-voyant" opacity="0"><circle cx="340" cy="449" r="7" fill="#ff7a32" opacity=".4" filter="url(#po-flou)"/><circle cx="340" cy="449" r="1.8" fill="#ffae5c"/></g>
+  <polygon class="po-flaque" points="0,0" fill="url(#po-flaque-g)" filter="url(#po-flou-sol)" opacity="0"/>
+  <path class="po-bord" d="M298.6 168V742" stroke="#fff4e2" stroke-width="1.6" opacity="0"/>
+  <ellipse class="po-lueur" cx="250" cy="455" rx="230" ry="360" fill="url(#po-lueur-g)" opacity="0"/>`;
+  P.vue=P.sas.querySelector('.vue');P.cadre=P.sas.querySelector('.cadre');P.battant=P.sas.querySelector('.battant');
+  P.jour=P.sas.querySelector('.jour');P.ombre=P.sas.querySelector('.ombre');P.blanc=P.sas.querySelector('.blanc');
+  const q=c=>P.sas.querySelector('.'+c);
+  P.po={poignee:q('po-poignee'),nuit:q('po-nuit'),voyant:q('po-voyant'),flaque:q('po-flaque'),bord:q('po-bord'),lueur:q('po-lueur'),voile:q('po-voile')};
+}
+/* La porte couvre l'écran comme l'image du labo, mais sans grandir au-delà de ce qu'il faut pour la voir en entier */
+function echelleSas(P){
+  const r=stage.getBoundingClientRect(),s=Math.min(Math.max(r.width/390,r.height/844),r.height/720);
+  P.cadre.style.transform='scale('+s.toFixed(4)+')';
+}
+/* L'état de la porte : th (degrés), poignee (0 à 1), nuit (la lampe éteinte), voyant, zoom (on passe la porte), blanc (l'œil ébloui) */
+function porteEtat(P,e){
+  const th=e.th||0,lum=lisse(clamp(th/45)),C=chant(th*Math.PI/180),po=P.po;
+  P.battant.style.transform=th?'rotateY('+th.toFixed(3)+'deg)':'';
+  po.poignee.setAttribute('transform','rotate('+(-28*(e.poignee||0)).toFixed(2)+' 179.5 298)');
+  const n=(e.nuit||0)*(1-.35*lum);
+  po.nuit.setAttribute('opacity',n.toFixed(3));P.ombre.style.opacity=(n*.9).toFixed(3);
+  po.voyant.setAttribute('opacity',(e.voyant||0).toFixed(3));
+  P.jour.style.opacity=(lum*.2).toFixed(3);
+  /* La lumière de la pièce claire tombe sur le sol du labo, par l'ouverture entre le chant du battant et le chambranle */
+  const S={x:205,y:560},Y=1010,J=PO.x+PO.l,B=PO.y+PO.h,k1=(Y-S.y)/(C.bas-S.y),k2=(Y-S.y)/(B-S.y);
+  po.flaque.setAttribute('points',[C.x,C.bas,J,B,S.x+(J-S.x)*k2,Y,S.x+(C.x-S.x)*k1,Y].map(v=>v.toFixed(1)).join(' '));
+  po.flaque.setAttribute('opacity',lum.toFixed(3));
+  po.bord.setAttribute('opacity',(lum*.75).toFixed(3));
+  po.lueur.setAttribute('cx',((C.x+J)/2).toFixed(1));po.lueur.setAttribute('opacity',(lum*.6+(e.blanc||0)*.4).toFixed(3));
+  /* Au sortir du noir, la pièce claire éblouit ; l'œil s'y fait à mesure que la porte s'ouvre */
+  po.voile.setAttribute('opacity',Math.min(1,.9-.5*lum+(e.blanc||0)).toFixed(3));
+  P.vue.style.transform=e.zoom&&e.zoom!==1?'scale('+e.zoom.toFixed(4)+')':'';
+  P.blanc.style.opacity=(e.blanc||0).toFixed(3);
+}
+/* Le geste « pousser la porte », seconde par seconde (accordé au son de la porte, qui démarre à 0,6 s) :
+   l'interrupteur, la lampe qui s'éteint et le voyant qui s'allume ; la béquille qu'on abaisse ; le pêne qui se libère,
+   la porte qui décolle de son joint, puis qui s'ouvre, lourde ; on passe la porte, ébloui. */
+const PORTE={nuit:.05,poignee:.55,pene:1.5,ouvre:2.2,ouvert:1.6,lache:2.05,passer:4.25,fin:5.25};
+function porteTemps(t){
+  if(reduit)return{th:t>.5?74:0,poignee:0,nuit:.7*clamp(t/.3),voyant:clamp(t/.3),zoom:1,blanc:.9*clamp((t-.7)/.4)};
+  const T=PORTE,p=clamp((t-T.passer)/1.25);
+  return{
+    th:5*lisse(clamp((t-T.pene)/(T.ouvre-T.pene)))+69*lisse(clamp((t-T.ouvre)/T.ouvert)),
+    poignee:t<T.lache?lisse(clamp((t-T.poignee)/.3)):1-lisse(clamp((t-T.lache)/.22)),
+    nuit:.72*lisse(clamp((t-T.nuit)/.8)),
+    voyant:lisse(clamp((t-.25)/.5)),
+    zoom:1+2*Math.pow(p,2.2),
+    blanc:.82*lisse(clamp((t-T.passer-.3)/.9))
+  };
+}
+
 const types={
   entree:{
     init(P){P.couv=P.el.querySelector('.couv');P.point=P.el.querySelector('.point');P.r=0;P.ouvert=false;P.couv.style.clipPath='';P.point.classList.remove('eteint');},
@@ -1035,31 +1190,44 @@ const types={
     }
   },
   sortie:{
-    init(P){P.porte=P.el.querySelector('.porte');P.dehors=P.el.querySelector('.dehors');P.decor=P.el.querySelector('.labo');P.t=0;P.etape='dehors';P.direct=false;P.garder=false;P.tPorte=0;P.rince=0;
+    init(P){P.sas=P.el.querySelector('.sas');P.dehors=P.el.querySelector('.dehors');P.decor=P.el.querySelector('.labo');P.t=0;P.etape='dehors';P.direct=false;P.garder=false;P.rince=0;
+      porteLabo(P);
       P.dehors.addEventListener('scroll',()=>stage.classList.toggle('defile',P.dehors.scrollTop>24),{passive:true});},
     enter(P){
       fermerVis();construireGrille();P.dehors.scrollTop=0;stage.classList.remove('defile');P.garder=false;
-      if(P.direct){P.direct=false;P.etape='dehors';P.porte.style.clipPath='none';P.decor.style.opacity=0;P.dehors.classList.add('visible');}
-      else{P.etape='rincer';P.t=0;decor(P);P.decor.style.opacity=1;P.porte.style.clipPath='inset(0 50% 0 50%)';P.dehors.classList.remove('visible');}
+      /* La porte revient fermée, la lampe allumée */
+      P.sas.style.transition=P.vue.style.transition=P.blanc.style.transition=P.dehors.style.transition='';
+      P.sas.style.opacity=0;P.sas.style.visibility='hidden';porteEtat(P,{});echelleSas(P);
+      if(P.direct){P.direct=false;P.etape='dehors';P.decor.style.opacity=0;P.dehors.classList.add('visible');}
+      else{P.etape='rincer';P.t=0;decor(P);P.decor.style.opacity=1;P.dehors.classList.remove('visible');}
     },
     /* Premier geste : ouvrir le robinet ; second geste : pousser la porte */
     down(P){
       if(P.etape==='rincer'){P.etape='rince';P.t=0;P.rince=SON.rincer()||1.2;}
-      else if(P.etape==='porte'){P.etape='ouvre';P.t=0;SON.pousser();}
+      else if(P.etape==='porte'){P.etape='ouvre';P.t=0;P.sas.style.opacity=1;P.decor.style.opacity=0;SON.pousser();}
     },
     tick(P,dt){
       if(P.etape==='dehors')return;
       P.t+=dt;
-      if(P.etape==='rince'&&P.t>=P.rince){P.etape='porte';P.t=0;}
+      /* Les tirages rincés, on se tourne vers la porte */
+      if(P.etape==='rince'&&P.t>=P.rince){P.etape='porte';P.t=0;P.sas.style.visibility='visible';}
+      if(P.etape==='porte'){
+        P.decor.style.opacity=(1-lisse(clamp(P.t/(reduit?.2:.7)))).toFixed(3);
+        P.sas.style.opacity=lisse(clamp((P.t-(reduit?0:.25))/(reduit?.2:.9))).toFixed(3);
+      }
       if(P.etape==='ouvre'){
-        P.decor.style.opacity=(1-lisse(clamp(P.t/.35))).toFixed(3);
-        const a=clamp((P.t-1)/(reduit?.3:2.6)),m=(50-50*lisse(a)).toFixed(2);
-        P.porte.style.clipPath=a>=1?'none':'inset(0 '+m+'% 0 '+m+'%)';
-        if(a>=1){P.etape='dehors';P.dehors.classList.add('visible');requestAnimationFrame(echelle);}
+        porteEtat(P,porteTemps(P.t));
+        /* Passée la porte, la pièce claire : la planche-contact sur la paillasse ; la porte s'efface dans la lumière */
+        if(P.t>=(reduit?1.1:PORTE.fin)){
+          P.etape='dehors';P.dehors.style.transition='opacity 2.2s ease,visibility 2.2s';P.dehors.classList.add('visible');requestAnimationFrame(echelle);
+          if(!reduit){P.vue.style.transition='transform 1.3s cubic-bezier(.4,0,.9,.7)';P.vue.style.transform='scale(3.3)';}
+          P.blanc.style.transition='opacity .6s ease';P.blanc.style.opacity=.9;
+          P.sas.style.transition='opacity 1.3s ease .25s,visibility 0s linear 1.6s';P.sas.style.opacity=0;P.sas.style.visibility='hidden';
+        }
       }
     },
     lampe(P){return P.etape==='rincer'||P.etape==='rince'||P.etape==='porte'||(P.etape==='ouvre'&&P.t<.1)?AMBIANCE:0;},
-    son(P){return P.etape==='dehors'||(P.etape==='ouvre'&&P.t>1.4)?[0,1,.9]:[1,0,.8];},
+    son(P){return P.etape==='dehors'||(P.etape==='ouvre'&&P.t>PORTE.ouvre+.1)?[0,1,.9]:[1,0,.8];},
     /* Sur la paillasse, les gestes en consigne discrète (une fois chacun), effacée dès qu'on fait défiler */
     consigne(P){
       if(P.etape==='dehors'){
@@ -1234,7 +1402,7 @@ addEventListener('resize',()=>{
   const P=planches[cur];
   if(P.kind==='dessin')taille(P);
   if(P.kind==='texte'){P.ajuste=null;ajuster(P);}
-  if(P.kind==='sortie')echelle();
+  if(P.kind==='sortie'){echelle();echelleSas(P);}
   if(vis.ouverte)afficherVis();
 });
 
