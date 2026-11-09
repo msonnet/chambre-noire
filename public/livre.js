@@ -433,18 +433,34 @@ function sauverChoix(l){try{localStorage.setItem(CLE_CHOIX,JSON.stringify(l));}c
 function lirePos(){try{return localStorage.getItem(CLE_POS);}catch(_){return null;}}
 function sauverPos(id){try{if(id)localStorage.setItem(CLE_POS,id);else localStorage.removeItem(CLE_POS);}catch(_){}}
 
-/* Un poème trop long pour l'écran se resserre (marge du haut, puis taille des vers) */
+/* Un poème se règle sur l'écran sans toucher au texte. D'abord en largeur : aucun vers ne passe à la ligne (quatrains et
+   tercets restent intacts) ; on réduit la taille des vers, et pour les vers très longs on élargit un peu la feuille.
+   Puis en hauteur : marge du haut, taille, interligne. */
+const VERS_PLANCHER=10;
+function plusLongVers(page){
+  let m=0;page.classList.add('mesure');
+  page.querySelectorAll('.v').forEach(v=>{const w=v.getBoundingClientRect().width;if(w>m)m=w;});
+  page.classList.remove('mesure');return m;
+}
+function largeurUtile(page){const cs=getComputedStyle(page);return page.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight);}
 function ajusterPage(page){
   if(!page||!page.clientHeight)return;
-  page.style.removeProperty('--t-vers');page.classList.remove('serree','tres-serree');
+  page.style.removeProperty('--t-vers');page.classList.remove('serree','tres-serree','large');
   const v=page.querySelector('.v');if(!v)return;
+  let t=parseFloat(getComputedStyle(v).fontSize),plancher=VERS_MIN;
+  const m=plusLongVers(page);
+  if(m>largeurUtile(page)){
+    let u=t*largeurUtile(page)/m*.975;
+    if(u<12.5){page.classList.add('large');u=t*largeurUtile(page)/m*.975;}
+    t=Math.max(VERS_PLANCHER,Math.min(t,Math.floor(u*4)/4));plancher=Math.min(VERS_MIN,t);
+    page.style.setProperty('--t-vers',t+'px');
+  }
   const deborde=()=>page.scrollHeight>page.clientHeight+1;
   if(!deborde())return;
   page.classList.add('serree');
-  let t=parseFloat(getComputedStyle(v).fontSize);
-  while(deborde()&&t>VERS_MIN){t=Math.max(VERS_MIN,t-.5);page.style.setProperty('--t-vers',t+'px');}
+  while(deborde()&&t>plancher){t=Math.max(plancher,t-.5);page.style.setProperty('--t-vers',t+'px');}
   /* Les très petits écrans : interligne plus serré, puis un demi-point de moins */
-  if(deborde()){page.classList.add('tres-serree');while(deborde()&&t>VERS_MIN-1){t-=.5;page.style.setProperty('--t-vers',t+'px');}}
+  if(deborde()){page.classList.add('tres-serree');while(deborde()&&t>plancher-1){t-=.5;page.style.setProperty('--t-vers',t+'px');}}
 }
 function ajuster(P){
   const page=P.el.querySelector('.page');if(!page)return;
@@ -670,6 +686,11 @@ function echelle(){
   const g=$('grille'),v=g&&g.querySelector('.vue');if(!v||!v.clientWidth)return;
   g.style.setProperty('--mm',(v.clientWidth/35).toFixed(3)+'px');
   g.querySelectorAll('.vue .mini').forEach(m=>{m.style.transform='scale('+(m.parentElement.clientWidth/480)+')';});
+  g.querySelectorAll('.vue .mini:not([data-ajuste]) .page').forEach(pg=>{
+    pg.parentElement.dataset.ajuste='1';
+    const m=plusLongVers(pg)/(parseFloat(pg.parentElement.style.transform.replace('scale(',''))||1),d=largeurUtile(pg),v=pg.querySelector('.v');
+    if(v&&m>d)pg.style.setProperty('--t-mini',(parseFloat(getComputedStyle(v).fontSize)*d/m*.97).toFixed(2)+'px');
+  });
 }
 /* Le compte-fils : garder le doigt sur la planche pour la regarder de près ; il suit le doigt, au-dessus de lui */
 const cf=$('compte-fils'),cfVue=cf.firstElementChild,LOUPE=3.4;

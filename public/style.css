@@ -33,6 +33,10 @@ body{position:fixed;inset:0}
 .num{font-family:var(--f-titre);font-weight:600;font-size:clamp(14px,3.9vw,17px);letter-spacing:.06em;margin:0 0 1.7em;color:var(--noir)}
 .strophe{margin:0 0 calc(var(--t-vers)*1.05)}
 .v{display:block;padding-left:1.2em;text-indent:-1.2em;font-size:var(--t-vers);line-height:1.62;color:var(--noir)}
+.page.mesure .v{white-space:nowrap;width:max-content}
+/* Vers très longs : la feuille s'élargit un peu */
+.page.large{padding-left:calc(clamp(8px,2.5vw,14px) + 15px);padding-right:calc(clamp(8px,2.5vw,14px) + 15px)}
+.papier .planche[data-kind="texte"] .page.large::before{left:clamp(8px,2.5vw,14px);right:clamp(8px,2.5vw,14px)}
 .silence{height:calc(var(--t-vers)*5)}
 .epi{display:flex;flex-direction:column;justify-content:center;text-align:center;padding-top:calc(64px + var(--haut))}
 .epi .v{padding-left:0;text-indent:0;font-style:italic}
@@ -128,9 +132,10 @@ svg.labo{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:
 .vue .mini{text-align:left;position:absolute;left:0;top:0;width:480px;height:720px;transform-origin:0 0;pointer-events:none}
 .vue .mini .page{height:720px;padding:70px 52px;max-width:none}
 .vue .mini .v,.vue .mini .num{font-size:16px;color:#26211e}
+.vue .mini .v{font-size:var(--t-mini,16px);white-space:nowrap}
 .vue .mini .strophe{margin-bottom:16px}
 .vue .mini .silence{height:80px}
-.vue .mini .page.long .v{font-size:13.5px}
+.vue .mini .page.long .v{font-size:var(--t-mini,13.5px)}
 .vue .mini .page.long .strophe{margin-bottom:12px}
 .vue .image img{position:absolute;left:7%;top:7%;width:86%;height:86%;object-fit:contain;opacity:.9}
 /* Les marquages du bord, en tout petit (il faut le compte-fils pour les lire) */
