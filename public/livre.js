@@ -1033,13 +1033,13 @@ function porteEtat(P,e){
 /* Le geste « pousser la porte », seconde par seconde (accordé au son de la porte, qui démarre à 0,6 s) :
    l'interrupteur, la lampe qui s'éteint et le voyant qui s'allume ; la béquille qu'on abaisse ; le pêne qui se libère,
    la porte qui décolle de son joint, puis qui s'ouvre, lourde. Puis on marche : quatre pas jusqu'à la paillasse,
-   à pas réguliers (CADENCE), la tête qui monte et se balance à chaque pas ; au bout, le regard se baisse sur la planche-contact. */
+   à pas réguliers (cadence), la tête qui monte et se balance à chaque pas ; une fois arrêté, la planche-contact vient en fondu. */
 const PORTE={nuit:.05,poignee:.55,pene:1.5,ouvre:2.2,ouvert:1.6,lache:2.05,marche:3.45,duree:2.75,cadence:.64,pas:4,avance:560,
-  tete:7,balance:3.5,regard:1.25,baisse:300,planche:5.6,fin:6.75};
+  tete:7,balance:3.5,planche:6.05,fin:7.15};
 function porteTemps(t){
   if(reduit)return{th:t>.5?74:0,poignee:0,nuit:.7*clamp(t/.3),voyant:clamp(t/.3)};
   const T=PORTE,u=clamp((t-T.marche)/T.duree),av=(1-Math.cos(Math.PI*u))/2,vit=Math.sin(Math.PI*u),
-    n=Math.max(0,t-T.marche)/T.cadence,phi=Math.PI*n,b=lisse(clamp((t-(T.marche+T.duree-T.regard))/(T.regard+.15)));
+    n=Math.max(0,t-T.marche)/T.cadence,phi=Math.PI*n;
   return{
     th:5*lisse(clamp((t-T.pene)/(T.ouvre-T.pene)))+69*lisse(clamp((t-T.ouvre)/T.ouvert)),
     poignee:t<T.lache?lisse(clamp((t-T.poignee)/.3)):1-lisse(clamp((t-T.lache)/.22)),
@@ -1047,7 +1047,7 @@ function porteTemps(t){
     voyant:lisse(clamp((t-.25)/.5)),
     d:T.avance*av,marche:av,pas:n,
     bx:T.balance*Math.sin(phi)*vit,
-    by:T.tete*Math.abs(Math.sin(phi))*vit-T.baisse*b
+    by:T.tete*Math.abs(Math.sin(phi))*vit
   };
 }
 
@@ -1235,7 +1235,7 @@ const types={
     enter(P){
       fermerVis();construireGrille();P.dehors.scrollTop=0;stage.classList.remove('defile');P.garder=false;
       /* La porte revient fermée, la lampe allumée */
-      P.sas.style.transition=P.dehors.style.transition=P.dehors.style.transform='';P.sas.classList.remove('marche');
+      P.sas.style.transition=P.dehors.style.transition='';P.sas.classList.remove('marche');
       P.sas.style.opacity=0;P.sas.style.visibility='hidden';echelleSas(P);porteEtat(P,{});P.pas=0;P.vu=false;
       if(P.direct){P.direct=false;P.etape='dehors';P.decor.style.opacity=0;P.dehors.classList.add('visible');}
       else{P.etape='rincer';P.t=0;decor(P);P.decor.style.opacity=1;P.dehors.classList.remove('visible');}
@@ -1262,12 +1262,11 @@ const types={
         const e=porteTemps(P.t);porteEtat(P,e);
         /* Les pas : un à chaque fois que le pied se pose */
         const k=Math.floor(e.pas||0);if(k>P.pas&&k<=PORTE.pas){P.pas=k;SON.marcher(k,k===PORTE.pas);}
-        /* Arrivé à la paillasse, le regard se baisse : la planche-contact monte dans le champ, la porte s'efface derrière */
+        /* Arrivé à la paillasse, on s'arrête : la planche-contact vient en fondu, la pièce claire s'efface */
         const T=reduit?{planche:.8,fin:1.7}:PORTE;
         if(!P.vu&&P.t>=T.planche){
-          P.vu=true;P.dehors.style.transition='none';P.dehors.style.transform=reduit?'':'translateY(110px)';void P.dehors.offsetWidth;
-          P.dehors.style.transition='opacity 1.3s ease,visibility 1.3s,transform 1.7s cubic-bezier(.2,.6,.3,1)';
-          P.dehors.classList.add('visible');P.dehors.style.transform='';requestAnimationFrame(echelle);
+          P.vu=true;P.dehors.style.transition='opacity 1.3s ease,visibility 1.3s';
+          P.dehors.classList.add('visible');requestAnimationFrame(echelle);
         }
         if(P.vu)P.sas.style.opacity=(1-lisse(clamp((P.t-T.planche-.15)/.9))).toFixed(3);
         if(P.t>=T.fin){P.etape='dehors';P.sas.style.visibility='hidden';P.sas.classList.remove('marche');}
