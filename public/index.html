@@ -332,7 +332,9 @@
 <div class="dehors-page">
 <div class="objet pince" aria-hidden="true"><svg viewBox="0 0 180 48">
 <defs><linearGradient id="bambou" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e2c48f"/><stop offset=".5" stop-color="#c9a46a"/><stop offset="1" stop-color="#9c7a45"/></linearGradient>
-<filter id="pi-ombre" x="-10%" y="-60%" width="120%" height="220%"><feGaussianBlur stdDeviation="2.4"/></filter></defs>
+<filter id="pi-ombre" filterUnits="userSpaceOnUse" x="-12" y="-6" width="200" height="66"><feGaussianBlur stdDeviation="1.6"/></filter></defs>
+<!-- l'ombre portée, dessinée avec la pince (vers le bas de l'écran, sous la lumière du plafond) -->
+<g transform="translate(-2.6 3.4)" filter="url(#pi-ombre)" fill="#000" opacity=".5"><path d="M6 19 L156 8 L158 14 L8 25Z"/><path d="M6 25 L156 34 L156 40 L6 29Z"/><rect x="1" y="16.5" width="24" height="15" rx="2.5"/></g>
 <path d="M6 19 L156 8 L158 14 L8 25Z" fill="url(#bambou)"/>
 <path d="M6 25 L156 34 L156 40 L6 29Z" fill="url(#bambou)"/>
 <g stroke="rgba(110,80,40,.35)" stroke-width=".5" fill="none"><path d="M30 19.6 L120 13M44 21.5 L140 14.2M30 27.2 L120 32.6M48 28.6 L140 34.6"/></g>
@@ -350,7 +352,8 @@
 <div class="feuille-contact"><div class="grille" id="grille"></div><div class="objet crayon-gras" aria-hidden="true"><svg viewBox="0 0 190 34">
 <defs><linearGradient id="cg-corps" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5e110b"/><stop offset=".28" stop-color="#b52c1c"/><stop offset=".48" stop-color="#d4503a"/><stop offset=".7" stop-color="#a62717"/><stop offset="1" stop-color="#4f0e08"/></linearGradient>
 <linearGradient id="cg-cire" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4c0c08"/><stop offset=".4" stop-color="#9c2416"/><stop offset=".55" stop-color="#b8402c"/><stop offset="1" stop-color="#410a06"/></linearGradient>
-<filter id="cg-ombre" x="-10%" y="-60%" width="120%" height="220%"><feGaussianBlur stdDeviation="2.2"/></filter></defs>
+<filter id="cg-ombre" filterUnits="userSpaceOnUse" x="-8" y="-4" width="206" height="44"><feGaussianBlur stdDeviation="1.5"/></filter></defs>
+<g transform="translate(2.1 3.7)" filter="url(#cg-ombre)" fill="#000" opacity=".5"><path d="M3 17 Q3 12.2 9 11.6 L23 11 L23 23 L9 22.4 Q3 21.8 3 17Z"/><rect x="21" y="10.5" width="134" height="13" rx="1.6"/></g>
 <path d="M155 17 c8 0 12 -5 19 -3 s8 8 1 11 s-9 2 -12 6" fill="none" stroke="#d6d0c4" stroke-width=".9" stroke-linecap="round"/>
 <path d="M3 17 Q3 12.2 9 11.6 L23 11 L23 23 L9 22.4 Q3 21.8 3 17Z" fill="url(#cg-cire)"/>
 <path d="M4.5 15.6 Q6 13.2 9.5 12.8" fill="none" stroke="rgba(255,200,180,.35)" stroke-width=".8" stroke-linecap="round"/>

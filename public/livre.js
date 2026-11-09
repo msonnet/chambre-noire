@@ -1000,7 +1000,7 @@ function porteLabo(P){
   <path class="po-bord" d="M298.6 168V742" stroke="#fff4e2" stroke-width="1.6" opacity="0"/>
   <ellipse class="po-lueur" cx="250" cy="455" rx="230" ry="360" fill="url(#po-lueur-g)" opacity="0"/>`;
   /* La paillasse du milieu de la pièce, plus proche : la même résine sombre que sous la planche-contact ; la planche y est posée,
-     avec la pince en bambou et le crayon gras. En fin de marche, elle remplit le bas de l'image : le fondu passe d'une paillasse à l'autre. */
+     avec le crayon gras. En fin de marche, elle remplit le bas de l'image : le fondu passe d'une paillasse à l'autre. */
   P.sas.querySelector('.banc').innerHTML=`<defs>
     <linearGradient id="po-resine" x1="0" y1="500" x2="0" y2="575" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#55524c"/><stop offset="1" stop-color="#4a4742"/></linearGradient>
     <radialGradient id="po-resine-reflet" cx="195" cy="520" r="120" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fffaf0" stop-opacity=".1"/><stop offset="1" stop-color="#fffaf0" stop-opacity="0"/></radialGradient>
@@ -1018,8 +1018,7 @@ function porteLabo(P){
   <polygon points="153,512 239,512 249,557 141,557" fill="#0f0e0d"/>
   <path d="M165 514L156.6 555M177.3 514L170.9 555M189.7 514L185.3 555M202 514L199.7 555M214.3 514L214 555M226.7 514L228.4 555" stroke="#2c2a27" stroke-width=".7"/>
   <path d="M153 512H239" stroke="#3a3632" stroke-width=".6"/>
-  <!-- la pince en bambou et le crayon gras rouge -->
-  <path d="M262 509L296 526M264 507L299 523" stroke="#c9a46a" stroke-width="1.8" stroke-linecap="round"/>
+  <!-- le crayon gras rouge -->
   <path d="M98 567L139 560" stroke="#b52c1c" stroke-width="3.2" stroke-linecap="round"/><path d="M98 567l-4 .8" stroke="#7a170e" stroke-width="2.6" stroke-linecap="round"/>`;
   P.vue=P.sas.querySelector('.vue');P.cadre=P.sas.querySelector('.cadre');P.battant=P.sas.querySelector('.battant');
   P.mur=P.sas.querySelector('.mur');P.piece=P.sas.querySelector('.piece');P.banc=P.sas.querySelector('.banc');
@@ -1065,11 +1064,11 @@ function porteEtat(P,e){
 /* Le geste « pousser la porte », seconde par seconde (accordé au son de la porte, qui démarre à 0,6 s) :
    l'interrupteur, la lampe qui s'éteint et le voyant qui s'allume ; la béquille qu'on abaisse ; le pêne qui se libère,
    la porte qui décolle de son joint, puis qui s'ouvre, lourde. Puis on marche : quatre pas jusqu'à la paillasse,
-   à pas réguliers (cadence), la tête qui monte et se balance à chaque pas. Pendant les derniers pas, la planche-contact vient
-   en fondu par-dessus la pièce claire (prepare : on la prépare, invisible, dès qu'on marche ; planche : début du fondu ;
-   fondu : sa durée), et elle continue d'approcher un peu (approche), pour que le mouvement ne s'arrête pas pendant le fondu. */
+   à pas réguliers (cadence), la tête qui monte et se balance à chaque pas. Pendant les derniers pas, la pièce claire s'efface
+   et laisse voir la planche-contact (prepare : on pose la planche sous la pièce, invisible, juste après le geste ;
+   planche : début du fondu ; fondu : sa durée). La marche continue sous le fondu. */
 const PORTE={nuit:.05,poignee:.55,pene:1.5,ouvre:2.2,ouvert:1.6,lache:2.05,marche:3.45,duree:2.75,cadence:.64,pas:4,avance:560,
-  tete:7,balance:3.5,prepare:3.6,planche:5.3,fondu:1.6,approche:.955};
+  tete:7,balance:3.5,prepare:.3,planche:5.3,fondu:1.6};
 function porteTemps(t){
   if(reduit)return{th:t>.5?74:0,poignee:0,nuit:.7*clamp(t/.3),voyant:clamp(t/.3)};
   const T=PORTE,u=clamp((t-T.marche)/T.duree),av=(1-Math.cos(Math.PI*u))/2,vit=Math.sin(Math.PI*u),
@@ -1260,7 +1259,7 @@ const types={
     }
   },
   sortie:{
-    init(P){P.sas=P.el.querySelector('.sas');P.dehors=P.el.querySelector('.dehors');P.feuilleP=P.dehors.querySelector('.dehors-page');P.decor=P.el.querySelector('.labo');P.aiguille=P.el.querySelector('.aiguille');
+    init(P){P.sas=P.el.querySelector('.sas');P.dehors=P.el.querySelector('.dehors');P.decor=P.el.querySelector('.labo');P.aiguille=P.el.querySelector('.aiguille');
       P.t=0;P.etape='dehors';P.direct=false;P.garder=false;P.rince=0;P.pas=0;P.vu=false;
       porteLabo(P);
       /* En sortant, on peut lever l'aiguille du disque : on touche le tourne-disque */
@@ -1269,8 +1268,7 @@ const types={
     enter(P){
       fermerVis();construireGrille();P.dehors.scrollTop=0;stage.classList.remove('defile');P.garder=false;
       /* La porte revient fermée, la lampe allumée */
-      Object.assign(P.dehors.style,{transition:'',visibility:'',opacity:'',willChange:''});Object.assign(P.feuilleP.style,{transition:'',transform:'',willChange:''});
-      P.sas.style.transition='';P.sas.classList.remove('marche');P.prep=false;
+      P.dehors.style.transition='';P.sas.style.transition='';P.sas.classList.remove('marche');P.prep=false;
       P.sas.style.opacity=0;P.sas.style.visibility='hidden';echelleSas(P);porteEtat(P,{});P.pas=0;P.vu=false;
       if(P.direct){P.direct=false;P.etape='dehors';P.decor.style.opacity=0;P.dehors.classList.add('visible');}
       else{P.etape='rincer';P.t=0;decor(P);P.decor.style.opacity=1;P.dehors.classList.remove('visible');}
@@ -1301,24 +1299,17 @@ const types={
         const e=porteTemps(P.t);porteEtat(P,e);
         /* Les pas : un à chaque fois que le pied se pose */
         const k=Math.floor(e.pas||0);if(k>P.pas&&k<=PORTE.pas){P.pas=k;SON.marcher(k,k===PORTE.pas);}
-        /* La planche-contact, préparée tôt (mise en page et peinture faites pendant qu'on marche, pour que rien n'accroche
-           pendant le fondu), vient par-dessus la pièce claire pendant les derniers pas ; la pièce reste entière dessous
-           jusqu'à la fin du fondu (sinon l'image passerait par un creux sombre) ; la planche continue d'approcher. */
-        const T=reduit?{prepare:.5,planche:.8,fondu:.8,approche:1}:PORTE,D=P.dehors;
-        if(!P.prep&&P.t>=T.prepare){
-          P.prep=true;echelle();
-          Object.assign(D.style,{transition:'none',visibility:'visible',opacity:'.01',willChange:'opacity'});
-          Object.assign(P.feuilleP.style,{transition:'none',transform:T.approche!==1?'scale('+T.approche+')':'',willChange:'transform'});
-        }
-        if(!P.vu&&P.t>=T.planche){
-          P.vu=true;void D.offsetWidth;
-          D.style.transition='opacity '+T.fondu+'s cubic-bezier(.4,0,.6,1)';D.style.opacity='1';D.classList.add('visible');
-          P.feuilleP.style.transition='transform '+(T.fondu+.9)+'s cubic-bezier(.1,.55,.3,1)';P.feuilleP.style.transform='';
-        }
+        /* Le fondu : la planche-contact est posée, entière et immobile, sous la pièce claire dès qu'on pousse la porte (on ne la voit pas :
+           la porte et la pièce sont opaques par-dessus) ; pendant les derniers pas, c'est la pièce claire qui s'efface au-dessus d'elle.
+           Rien n'est redessiné pendant le fondu (Safari redessinait la planche quand c'est elle qui apparaissait : la pince arrivait
+           en retard, la pièce se revoyait un instant). */
+        const T=reduit?{prepare:.2,planche:.8,fondu:.8}:PORTE,D=P.dehors;
+        if(!P.prep&&P.t>=T.prepare){P.prep=true;D.style.transition='none';D.classList.add('visible');echelle();}
+        /* au même pas que la marche (l'horloge du livre), pas une transition à part : Safari les désaccordait */
+        if(P.t>=T.planche)P.sas.style.opacity=(1-lisse(clamp((P.t-T.planche)/T.fondu))).toFixed(3);
         if(P.t>=T.planche+T.fondu+.05){
           P.etape='dehors';P.sas.style.visibility='hidden';P.sas.classList.remove('marche');
-          /* Le fondu fini, la planche redevient une page ordinaire */
-          setTimeout(()=>{if(P.etape!=='dehors')return;Object.assign(D.style,{transition:'',visibility:'',opacity:'',willChange:''});P.feuilleP.style.willChange='';},1200);
+          setTimeout(()=>{if(P.etape==='dehors')D.style.transition='';},60);
         }
       }
     },
