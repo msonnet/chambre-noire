@@ -74,6 +74,16 @@ svg.labo{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:
 .labo .temoin{opacity:.2;transition:opacity .6s ease}
 .labo.joue .temoin{opacity:1}
 .labo .goutte{transform-box:view-box;animation:goutte 5.5s ease-in infinite;opacity:0}
+/* Le robinet qui coule quand on rince les tirages : le filet descend du bec, l'eau court dedans, des ronds dans la cuvette ;
+   quand on ferme, le filet se détache et tombe */
+.labo .filet{opacity:0;transform-box:view-box;transform-origin:157px 657px;transform:scaleY(0);transition:transform .3s ease-in,opacity .25s ease}
+.labo.coule .filet{opacity:1;transform-origin:157px 602px;transform:scaleY(1);transition:transform .22s ease-out,opacity .1s ease}
+.labo .filet-reflet{animation:filet .32s linear infinite}
+@keyframes filet{to{stroke-dashoffset:-14}}
+.labo .filet-eclabousse{transform-box:fill-box;transform-origin:center;animation:eclabousse .55s ease-out infinite}
+.labo .filet-eclabousse.b{animation-delay:-.27s}
+@keyframes eclabousse{from{transform:scale(.4);opacity:.75}to{transform:scale(1.6);opacity:0}}
+.labo.coule .goutte{animation:none;opacity:0}
 @keyframes goutte{0%,70%{transform:translateY(0);opacity:0}72%{opacity:.6}84%{transform:translateY(64px);opacity:.5}85%,100%{transform:translateY(64px);opacity:0}}
 @keyframes balance{from{transform:rotate(-1.3deg)}to{transform:rotate(1.3deg)}}
 /* L'interrupteur, près de la porte : dans le noir, on ne voit que son petit voyant */
@@ -250,4 +260,4 @@ svg.labo{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:
 /* Le cadre de focus n'apparaît que si l'on se sert du clavier */
 .clavier #chambre:focus-visible{outline:1px solid rgba(233,229,220,.25);outline-offset:-4px}
 noscript p{position:absolute;inset:auto 0 40% 0;text-align:center;font-style:italic;color:var(--cendre)}
-@media (prefers-reduced-motion:reduce){.labo.joue .disque{animation:none}.labo .seche,.labo .goutte{animation:none}.crayon.trace path{animation:none;stroke-dashoffset:0}.compte-fils{transition:none}.point{animation:none}.anneau{animation-name:fondu}#lampe,#consigne,.nav,.point,.dehors,.couloir{transition:none}}
+@media (prefers-reduced-motion:reduce){.labo.joue .disque{animation:none}.labo .seche,.labo .goutte,.labo .filet-reflet,.labo .filet-eclabousse{animation:none}.crayon.trace path{animation:none;stroke-dashoffset:0}.compte-fils{transition:none}.point{animation:none}.anneau{animation-name:fondu}#lampe,#consigne,.nav,.point,.dehors,.couloir{transition:none}}

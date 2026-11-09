@@ -869,6 +869,13 @@ function decor(P){
   <path d="M128 500V586Q128 600 142 600H156" stroke="#2c0e09" stroke-width="7" stroke-linecap="round" fill="none"/>
   <path d="M130.5 500V586Q130.5 597.5 142 597.5H155" stroke="#7a2a1d" stroke-width="1.2" fill="none" opacity=".8"/>
   <ellipse class="goutte" cx="157" cy="606" rx="1.6" ry="2.4" fill="#ff6a4a" opacity=".55"/>
+  <!-- quand on rince les tirages, le robinet coule dans la première cuvette -->
+  <g class="filet">
+    <path d="M157 602.5C157.7 618 156.5 637 157.2 656.5" stroke="#c63e2a" stroke-width="2.2" stroke-linecap="round" fill="none" opacity=".7"/>
+    <path class="filet-reflet" d="M156.4 603C157 618 155.9 637 156.6 655" stroke="#ff9f80" stroke-width=".8" stroke-dasharray="5 9" stroke-linecap="round" fill="none" opacity=".85"/>
+    <ellipse class="filet-eclabousse" cx="157.2" cy="657.5" rx="9" ry="1.7" fill="none" stroke="#ff7a5a" stroke-width=".7" opacity=".55"/>
+    <ellipse class="filet-eclabousse b" cx="157.2" cy="657.5" rx="6" ry="1.2" fill="none" stroke="#ff8a6a" stroke-width=".6" opacity=".5"/>
+  </g>
   <rect width="390" height="844" fill="url(#grain)" opacity=".09"/>
   <rect width="390" height="844" fill="url(#ombre)"/>`).replace(/id="([a-z-]+)"/g,'id="'+pre+'-$1"').replace(/url\(#([a-z-]+)\)/g,'url(#'+pre+'-$1)');
 }
@@ -1242,6 +1249,7 @@ const types={
       P.sas.style.opacity=0;P.sas.style.visibility='hidden';echelleSas(P);porteEtat(P,{});P.pas=0;P.vu=false;
       if(P.direct){P.direct=false;P.etape='dehors';P.decor.style.opacity=0;P.dehors.classList.add('visible');}
       else{P.etape='rincer';P.t=0;decor(P);P.decor.style.opacity=1;P.dehors.classList.remove('visible');}
+      P.coule=false;P.decor.classList.remove('coule');
       placerAiguille(P);
     },
     /* Premier geste : ouvrir le robinet ; second geste : pousser la porte */
@@ -1256,6 +1264,9 @@ const types={
       const montre=(P.etape==='rincer'||P.etape==='rince')&&SON.platine.etat().joue;
       if(P.aiguille.hidden===montre){P.aiguille.hidden=!montre;if(montre)placerAiguille(P);}
       /* Les tirages rincés, on se tourne vers la porte */
+      /* Le robinet coule, accordé au son du rinçage (l'eau de 0,2 à 3 s) ; sans le son, un peu moins longtemps */
+      const coule=P.etape==='rince'&&(P.rince>2?P.t>=.2&&P.t<3:P.t>=.1&&P.t<1);
+      if(coule!==P.coule){P.coule=coule;P.decor.classList.toggle('coule',coule);}
       if(P.etape==='rince'&&P.t>=P.rince){P.etape='porte';P.t=0;P.sas.style.visibility='visible';}
       if(P.etape==='porte'){
         P.decor.style.opacity=(1-lisse(clamp(P.t/(reduit?.2:.7)))).toFixed(3);
