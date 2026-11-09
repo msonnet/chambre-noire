@@ -7,7 +7,7 @@ function creerSon(){
   /* Volumes (0 à 1) : les réglages principaux */
   const VOL={ventilation:.16,dehors:.3,pas:.6,coup:.7,porte:.62,porteDouce:.5,interrupteur:.42,goutte:.18,bain:.55,egoutte:.13,
     obturateur:.55,papier:.5,pince:.42,rincage:.45,feuille:.3,
-    musique:.5,craquement:.55,sillon:.5,platine:.5,batiment:.2,pincettes:.32};
+    musique:.16,craquement:.2,sillon:.2,platine:.32,batiment:.2,pincettes:.32};
   let actif=true;try{actif=localStorage.getItem(CLE_SON)!=='0';}catch(_){}
   let ctx=null,hors=false,maitre=null,filtreLabo=null,charge=null,DON=null;
   const tampons={},bus={},cibles={labo:0,dehors:0},journal=[],erreurs=[],boucles=[],pioches={},fichiers={};
@@ -126,7 +126,7 @@ function creerSon(){
   }
   /* Le tourne-disque : un disque à deux faces (musique/disques.json), lu par un élément audio qui passe par le labo
      (un petit haut-parleur, les craquements du vinyle) ; à la fin de la face, l'aiguille tourne dans le dernier sillon. */
-  const PL={disques:null,face:'a',piste:0,joue:false,fin:false,el:null,craq:null,sillon:null,attente:null};
+  const PL={disques:null,face:'a',piste:0,joue:false,arret:false,fin:false,el:null,craq:null,sillon:null,charge:null};
   try{const f=localStorage.getItem('chambre-noire-face');if(f)PL.face=f;}catch(_){}
   fetch('musique/disques.json').then(r=>r.ok?r.json():null).then(d=>{PL.disques=d;if(d&&!d[PL.face])PL.face=Object.keys(d)[0];}).catch(()=>{});
   function plChaine(){
@@ -140,7 +140,7 @@ function creerSon(){
     el.addEventListener('ended',()=>{
       const pistes=PL.disques[PL.face].pistes;
       if(PL.piste<pistes.length-1){PL.piste++;plCharger(true);}
-      else{PL.fin=true;plBoucle('craq',false);plBoucle('sillon',true);}
+      else{PL.fin=true;plBoucle('craq',false);if(PL.joue)plBoucle('sillon',true);}
     });
     el.addEventListener('error',()=>{if(PL.joue){erreurs.push('platine : piste illisible');}});
   }
@@ -153,47 +153,57 @@ function creerSon(){
   }
   function plCharger(jouerTout){
     const p=PL.disques[PL.face].pistes[PL.piste];
-    PL.el.src=p.fichier;PL.el.currentTime=0;
-    if(jouerTout){const pr=PL.el.play();if(pr&&pr.catch)pr.catch(e=>erreurs.push('platine : '+(e&&e.message||e)));}
+    PL.el.src=p.fichier;PL.el.currentTime=0;PL.charge=PL.face+PL.piste;
+    if(jouerTout)plJouer();
+  }
+  function plJouer(){const pr=PL.el.play();if(pr&&pr.catch)pr.catch(e=>erreurs.push('platine : '+(e&&e.message||e)));}
+  function aiguille(descend,auto){
+    if(!vivant())return;
+    if(descend)jouer('platine',pioche('platine')%2,{gain:VOL.platine,bus:'labo',pan:.25});
+    else jouer('platine',2+(Math.random()<.5?0:1),{gain:VOL.platine*.8,bus:auto?null:'labo',pan:.25});
   }
   const platine={
     pret:()=>!!PL.disques,
-    etat:()=>{const d=PL.disques&&PL.disques[PL.face];const p=d&&d.pistes[PL.piste];return {joue:PL.joue,fin:PL.fin,face:PL.face,faces:PL.disques?Object.keys(PL.disques).map(k=>({cle:k,titre:PL.disques[k].titre})):[],piste:PL.piste,nPistes:d?d.pistes.length:0,titre:p?p.titre:'',auteur:p?p.auteur+(p.interprete?' ('+p.interprete+')':''):'',position:PL.el?Math.round(PL.el.currentTime*10)/10:0,lit:!!(PL.el&&!PL.el.paused)};},
-    /* Poser l'aiguille : le bras descend, le sillon crépite, la musique arrive (chaque piste commence par un court silence) */
-    poser(){
+    etat:()=>{const d=PL.disques&&PL.disques[PL.face];const p=d&&d.pistes[PL.piste];return {joue:PL.joue,arret:PL.arret,fin:PL.fin,face:PL.face,faceTitre:d?d.titre:'',piste:PL.piste,nPistes:d?d.pistes.length:0,titre:p?p.titre:'',auteur:p?p.auteur+(p.interprete?' ('+p.interprete+')':''):'',position:PL.el?Math.round(PL.el.currentTime*10)/10:0,lit:!!(PL.el&&!PL.el.paused)};},
+    /* Jouer : poser l'aiguille ; après une pause, elle retrouve l'endroit du morceau où on l'avait relevée */
+    lire(){
       if(!PL.disques||PL.joue||!vivant())return;
       plChaine();if(!PL.el)return;
-      PL.joue=true;PL.fin=false;
-      jouer('platine',pioche('platine')%2,{gain:VOL.platine,bus:'labo',pan:-.15});
-      plBoucle('craq',true);plCharger(true);
+      PL.joue=true;aiguille(true);
+      if(PL.fin){plBoucle('sillon',true);return;}
+      plBoucle('craq',true);
+      if(PL.arret&&PL.charge===PL.face+PL.piste)plJouer();else plCharger(true);
+      PL.arret=false;
     },
-    relever(auto){
+    /* Pause : relever l'aiguille (le morceau garde sa place) */
+    pause(auto){
       if(!PL.joue)return;
-      PL.joue=false;PL.fin=false;try{PL.el.pause();}catch(_){}
-      plBoucle('craq',false);plBoucle('sillon',false);
-      if(vivant())jouer('platine',2+(Math.random()<.5?0:1),{gain:VOL.platine*.8,bus:auto?null:'labo',pan:-.15});
+      PL.joue=false;PL.arret=true;try{PL.el.pause();}catch(_){}
+      plBoucle('craq',false);plBoucle('sillon',false);aiguille(false,auto);
     },
+    /* Changer de morceau : le suivant sur la face (après le dernier, on revient au premier) */
     suivante(){
-      if(!PL.joue||!PL.disques)return;
+      if(!PL.disques||!vivant())return;
+      plChaine();if(!PL.el)return;
       const n=PL.disques[PL.face].pistes.length;
-      PL.piste=PL.fin?0:(PL.piste+1)%n;PL.fin=false;plBoucle('sillon',false);plBoucle('craq',true);
-      jouer('platine',2,{gain:VOL.platine*.7,bus:'labo',pan:-.15});
-      jouer('platine',1,{t:ctx.currentTime+.35,gain:VOL.platine*.8,bus:'labo',pan:-.15});
-      plCharger(true);
+      PL.piste=PL.fin?0:(PL.piste+1)%n;PL.fin=false;PL.arret=false;plBoucle('sillon',false);
+      if(PL.joue)aiguille(false);
+      PL.joue=true;setTimeout(()=>aiguille(true),300);plBoucle('craq',true);plCharger(true);
     },
-    /* Retourner le disque : on relève l'aiguille, on retourne le disque, et l'on repose l'aiguille au début de l'autre face */
-    retourner(face){
-      if(!PL.disques||!PL.disques[face]||face===PL.face)return;
-      const jouait=PL.joue;
-      if(jouait)platine.relever();
-      PL.face=face;PL.piste=0;try{localStorage.setItem('chambre-noire-face',face);}catch(_){}
-      jouer('feuilles',pioche('feuilles'),{gain:VOL.feuille*1.2,bus:'labo'});
-      if(jouait){PL.joue=false;platine.poser();}
+    /* L'autre face : on retourne le disque et l'on pose l'aiguille au début */
+    autreFace(){
+      if(!PL.disques||!vivant())return;
+      plChaine();if(!PL.el)return;
+      const faces=Object.keys(PL.disques),f=faces[(faces.indexOf(PL.face)+1)%faces.length];
+      if(PL.joue){PL.joue=false;try{PL.el.pause();}catch(_){}plBoucle('craq',false);plBoucle('sillon',false);aiguille(false);}
+      PL.face=f;PL.piste=0;PL.fin=false;PL.arret=false;try{localStorage.setItem('chambre-noire-face',f);}catch(_){}
+      jouer('feuilles',pioche('feuilles'),{t:ctx.currentTime+.3,gain:VOL.feuille,bus:'labo'});
+      PL.joue=true;setTimeout(()=>aiguille(true),1300);plBoucle('craq',true);plCharger(true);
     },
-    /* L'onglet caché : la musique s'arrête de tourner avec lui */
-    pause(on){if(PL.el&&PL.joue&&!PL.fin){try{on?PL.el.pause():PL.el.play();}catch(_){}}}
+    /* L'onglet caché : le disque s'arrête de tourner avec lui */
+    visible(on){if(PL.el&&PL.joue&&!PL.fin){try{on?plJouer():PL.el.pause();}catch(_){}}}
   };
-  document.addEventListener('visibilitychange',()=>platine.pause(document.hidden));
+  document.addEventListener('visibilitychange',()=>platine.visible(!document.hidden));
   Object.keys(platine).forEach(k=>{const f=platine[k];platine[k]=function(){try{return f.apply(platine,arguments);}catch(e){erreurs.push('platine '+k+' : '+(e&&e.message||e));return null;}};});
 
   const api={
@@ -662,14 +672,35 @@ function decor(P){
   <!-- la corde à linge et les tirages qui sèchent -->
   <path d="M-10 250 Q195 330 400 250" stroke="#6a2218" stroke-width="1.2" fill="none"/>
   ${corde}
+  <!-- le tourne-disque, sur un petit meuble : la pochette posée contre le mur, le plateau, le disque, le bras -->
+  <rect x="240" y="570" width="150" height="68" fill="#120605" stroke="#4a120d" stroke-width=".6"/>
+  <path d="M315 574V634" stroke="#3a100b" stroke-width=".8"/><circle cx="308" cy="604" r="1.6" fill="#5c1a12"/><circle cx="322" cy="604" r="1.6" fill="#5c1a12"/>
+  <g transform="rotate(-7 266 532)"><rect x="240" y="480" width="54" height="54" fill="#33100b" stroke="#6a2418" stroke-width=".6"/><circle cx="267" cy="507" r="17" fill="none" stroke="#7a2a1d" stroke-width="1"/><circle cx="267" cy="507" r="5" fill="#7a2a1d"/></g>
+  <polygon points="252,533 382,533 388,560 246,560" fill="#2a0f0a" stroke="#6a2418" stroke-width=".8"/>
+  <rect x="246" y="560" width="142" height="10" fill="#1a0807" stroke="#5c1a12" stroke-width=".6"/>
+  <circle class="temoin" cx="256" cy="565" r="1.8" fill="#ffae5c"/>
+  <ellipse cx="308" cy="547" rx="47" ry="11.5" fill="#1e0b08" stroke="#4a160f" stroke-width=".6"/>
+  <g transform="translate(308 545.5) scale(1 .23)"><g class="disque">
+    <circle r="44" fill="#080404"/>
+    <circle r="38" fill="none" stroke="#24100c" stroke-width="1.4"/><circle r="31" fill="none" stroke="#24100c" stroke-width="1.4"/><circle r="24" fill="none" stroke="#24100c" stroke-width="1.4"/>
+    <path d="M-40 -6 A40.5 40.5 0 0 1 -12 -38.5" stroke="#8a3a2c" stroke-width="3" fill="none" opacity=".55"/>
+    <path d="M40 6 A40.5 40.5 0 0 1 12 38.5" stroke="#8a3a2c" stroke-width="3" fill="none" opacity=".35"/>
+    <circle r="12.5" fill="#8a2a1d"/><rect x="3" y="-2" width="7" height="4" fill="#c56a50"/><circle r="1.6" fill="#d8a080"/>
+  </g></g>
+  <circle cx="371" cy="563" r="2.2" fill="#1a0807" stroke="#6a2418" stroke-width=".6"/>
+  <g class="bras">
+    <path d="M366 536L373 563" stroke="#b08070" stroke-width="1.6" stroke-linecap="round"/>
+    <rect x="370.5" y="561" width="5" height="7" rx="1" fill="#d0a090" transform="rotate(-15 373 564)"/>
+  </g>
+  <circle cx="366" cy="536" r="4.5" fill="#2a0f0a" stroke="#8a4a3a" stroke-width=".8"/><circle cx="366" cy="536" r="1.5" fill="#b08070"/>
   <!-- la paillasse et les trois cuvettes -->
   <rect x="0" y="638" width="390" height="206" fill="url(#paillasse)"/>
   ${cuves}
   <path d="M136 666 L176 640 M141 668 L180 643" stroke="#2a0c08" stroke-width="2.2" stroke-linecap="round"/>
-  <!-- le robinet, au-dessus des cuvettes ; une goutte tombe de temps en temps -->
-  <path d="M378 470V560Q378 578 360 578H344" stroke="#2c0e09" stroke-width="7" stroke-linecap="round" fill="none"/>
-  <path d="M375.5 470V560Q375.5 575.5 360 575.5H345" stroke="#7a2a1d" stroke-width="1.2" fill="none" opacity=".8"/>
-  <ellipse class="goutte" cx="343" cy="584" rx="1.6" ry="2.4" fill="#ff6a4a" opacity=".55"/>
+  <!-- le robinet, au-dessus de la première cuvette ; une goutte tombe de temps en temps -->
+  <path d="M128 500V586Q128 600 142 600H156" stroke="#2c0e09" stroke-width="7" stroke-linecap="round" fill="none"/>
+  <path d="M130.5 500V586Q130.5 597.5 142 597.5H155" stroke="#7a2a1d" stroke-width="1.2" fill="none" opacity=".8"/>
+  <ellipse class="goutte" cx="157" cy="606" rx="1.6" ry="2.4" fill="#ff6a4a" opacity=".55"/>
   <rect width="390" height="844" fill="url(#grain)" opacity=".09"/>
   <rect width="390" height="844" fill="url(#ombre)"/>`).replace(/id="([a-z-]+)"/g,'id="'+pre+'-$1"').replace(/url\(#([a-z-]+)\)/g,'url(#'+pre+'-$1)');
 }
@@ -727,7 +758,7 @@ const types={
   seuil:{
     init(P){P.t=0;P.parti=false;P.cible=null;P.clic=false;P.tLampe=0;P.decor=P.el.querySelector('.labo');P.inter=P.el.querySelector('.interrupteur');
       P.inter.addEventListener('click',()=>{if(planches[cur]===P)allumer(P);});},
-    enter(P,avant){P.t=0;P.parti=false;P.clic=false;P.tLampe=0;decor(P);P.decor.style.opacity=0;P.decor.style.transform='';P.inter.classList.remove('visible','allume');if(avant==='sortie')SON.porte(true);},
+    enter(P,avant){P.t=0;P.parti=false;P.clic=false;P.tLampe=0;P.depart=Infinity;P.question=false;P.demande=false;decor(P);majPlatine();P.decor.style.opacity=0;P.decor.style.transform='';P.inter.classList.remove('visible','allume');if(avant==='sortie')SON.porte(true);},
     /* Toucher l'écran, comme toucher l'interrupteur, allume la lampe (une fois l'œil un peu habitué) */
     down(P){if(P.t>1)allumer(P);},
     tick(P,dt){
@@ -735,16 +766,23 @@ const types={
       if(P.t>SEUIL_VOYANT&&!P.clic)P.inter.classList.add('visible');
       /* L'œil s'habitue : on devine des formes ; la lampe montre le labo ; on s'approche de la cuvette */
       const avant=.07*lisse(clamp((P.t-.9)/2)),u=P.clic?P.t-P.tLampe:-1;
-      const allume=P.clic?lisse(clamp(u/.35)):0,va=P.clic?lisse(clamp((u-SEUIL_REGARD)/SEUIL_APPROCHE)):0;
+      /* Une fois la lampe allumée, on voit le tourne-disque : on propose un disque (sauf s'il tourne déjà, ou si l'on a dit non) */
+      if(P.clic&&!P.demande&&u>1){
+        P.demande=true;
+        if(SON.ecoute()&&SON.platine.pret()&&!SON.platine.etat().joue&&!refusDisque)poserQuestion(P);else P.depart=P.tLampe+SEUIL_REGARD;
+      }
+      if(P.question&&P.t-P.tLampe>14)repondre(P,false);
+      const allume=P.clic?lisse(clamp(u/.35)):0,va=P.clic?lisse(clamp((P.t-P.depart)/SEUIL_APPROCHE)):0;
       P.decor.style.opacity=(Math.max(avant,allume)*(1-va)).toFixed(3);
       if(va>0&&!reduit)P.decor.style.transform='scale('+(1+.06*va).toFixed(4)+')';
-      if(P.clic&&u>=SEUIL_REGARD+SEUIL_APPROCHE&&!P.parti){
+      if(P.clic&&P.t>=P.depart+SEUIL_APPROCHE&&!P.parti){
         P.parti=true;const c=P.cible!=null?P.cible:cur+1;P.cible=null;montrer(c);
       }
     },
     lampe(P){return P.clic?AMBIANCE:0;},
     son(){return [1,0,.8];},
-    consigne(P){if(P.clic)return '';if(P.t>2.6)return 'Allumer la lampe';return P.t>.8?'Laisser l’œil s’habituer au noir':'';}
+    consigne(P){if(P.clic)return '';if(P.t>2.6)return 'Allumer la lampe';return P.t>.8?'Laisser l’œil s’habituer au noir':'';},
+    up(P){}
   },
   texte:{
     init(P){
@@ -765,7 +803,7 @@ const types={
         SON.developper(P.id,holding);
         if(holding){
           P.prog=Math.min(1,P.prog+dt/DEV_TEXTE);sale=true;
-          if(P.prog>=1){P.dev=true;vus.texte=true;SON.finDev();if(P.apres.length)SON.platine.relever(true);}
+          if(P.prog>=1){P.dev=true;vus.texte=true;SON.finDev();if(P.apres.length)SON.platine.pause(true);}
         }
       }
       else if(P.blanc<1){P.blanc=Math.min(1,P.blanc+dt/FIXAGE);sale=true;}
@@ -863,31 +901,38 @@ const types={
   }
 };
 
-/* Le tourne-disque : dans le noir, on ne voit que son voyant ; le toucher ouvre ses commandes */
-const voyantPl=$('platine'),panPl=$('platine-commandes');
-let plOuvert=false,plMinuterie=0;
+/* Le tourne-disque. On le voit dans le labo, au seuil ; on y propose un disque. Ensuite, dans le labo,
+   une note de musique ouvre ses commandes : jouer ou mettre en pause, changer de morceau, l'autre face. */
+const noteEl=$('note'),panPl=$('platine-commandes'),questionEl=$('question-disque');
+let plOuvert=false,plMinuterie=0,refusDisque=false;
 function majPlatine(){
   const e=SON.platine.etat();
-  voyantPl.classList.toggle('joue',!!e.joue);
+  noteEl.classList.toggle('joue',!!e.joue);
+  document.querySelectorAll('svg.labo').forEach(sv=>sv.classList.toggle('joue',!!e.joue));
   if(!plOuvert)return;
-  $('pl-faces').innerHTML='';
-  e.faces.forEach((f,k)=>{
-    if(k)$('pl-faces').append(' · ');
-    const b=document.createElement('button');b.type='button';b.textContent=f.titre.replace(/^Face/,'face');b.className='pl-face'+(f.cle===e.face?' choisie':'');
-    b.setAttribute('aria-pressed',f.cle===e.face?'true':'false');
-    b.addEventListener('click',()=>{SON.platine.retourner(f.cle);majPlatine();garderPl();});
-    $('pl-faces').append(b);
-  });
-  $('pl-piste').textContent=e.joue?(e.fin?'Le dernier sillon':(e.piste+1)+'. '+e.titre+' — '+e.auteur):'';
-  $('pl-poser').hidden=!!e.joue;$('pl-suiv').hidden=!e.joue;$('pl-lever').hidden=!e.joue;
+  $('pl-piste').textContent=e.fin?e.faceTitre+' : la face est finie':(e.joue||e.arret)?e.faceTitre+' · '+(e.piste+1)+'. '+e.titre+' — '+e.auteur:'';
+  $('pl-lire').hidden=!!e.joue;$('pl-lire').textContent=e.arret?'reprendre':'jouer le disque';
+  $('pl-pause').hidden=!e.joue;
 }
 function garderPl(){clearTimeout(plMinuterie);plMinuterie=setTimeout(fermerPl,9000);}
 function ouvrirPl(){if(!SON.platine.pret())return;plOuvert=true;panPl.hidden=false;majPlatine();garderPl();}
 function fermerPl(){plOuvert=false;panPl.hidden=true;clearTimeout(plMinuterie);}
-voyantPl.addEventListener('click',()=>{plOuvert?fermerPl():ouvrirPl();});
-$('pl-poser').addEventListener('click',()=>{SON.debloquer();SON.platine.poser();majPlatine();garderPl();});
-$('pl-suiv').addEventListener('click',()=>{SON.platine.suivante();majPlatine();garderPl();});
-$('pl-lever').addEventListener('click',()=>{SON.platine.relever();majPlatine();garderPl();});
+noteEl.addEventListener('click',()=>{plOuvert?fermerPl():ouvrirPl();});
+function geste(f){return()=>{SON.debloquer();f();majPlatine();garderPl();};}
+$('pl-lire').addEventListener('click',geste(()=>SON.platine.lire()));
+$('pl-pause').addEventListener('click',geste(()=>SON.platine.pause()));
+$('pl-suiv').addEventListener('click',geste(()=>SON.platine.suivante()));
+$('pl-face').addEventListener('click',geste(()=>SON.platine.autreFace()));
+/* La question, au seuil, une fois la lampe allumée */
+function poserQuestion(P){P.question=true;P.depart=Infinity;questionEl.hidden=false;}
+function repondre(P,oui){
+  if(!P.question)return;
+  P.question=false;questionEl.hidden=true;
+  if(oui){SON.debloquer();SON.platine.lire();majPlatine();}else refusDisque=true;
+  P.depart=P.t+(oui?2.8:.5);
+}
+$('qd-oui').addEventListener('click',()=>{const P=planches[cur];if(P.kind==='seuil')repondre(P,true);});
+$('qd-non').addEventListener('click',()=>{const P=planches[cur];if(P.kind==='seuil')repondre(P,false);});
 
 /* Le lecteur allume la lampe rouge du labo */
 function allumer(P){
@@ -907,7 +952,7 @@ function majNav(){
 }
 function montrer(n){
   const A=planches[cur],avant=A.kind;A.el.classList.remove('active');types[A.kind].up&&types[A.kind].up(A);holding=false;
-  SON.calme();fermerPl();
+  SON.calme();fermerPl();questionEl.hidden=true;
   if(A.kind==='dessin'&&n!==cur)liberer(A);
   cur=n;const P=planches[cur];P.el.classList.add('active');stage.dataset.kind=P.kind;
   prevoir(cur);
@@ -958,7 +1003,7 @@ function finir(id){
   }
 }
 stage.addEventListener('pointerdown',e=>{
-  if(e.target.closest('button,#platine-commandes'))return;
+  if(e.target.closest('button,#platine-commandes,#question-disque'))return;
   if(plOuvert){fermerPl();return;}
   if(!e.target.closest('.dehors')){try{stage.setPointerCapture(e.pointerId);}catch(_){}}
   debut(e.pointerId,e.clientX,e.clientY,e.pointerType!=='mouse');

@@ -1,6 +1,6 @@
 /* Chambre noire hors ligne : tout le livre est gardé sur le téléphone.
    Fichier produit par outils/construire.py ; la version change dès qu'un fichier du livre change. */
-const VERSION='chambre-noire-7258be013b';
+const VERSION='chambre-noire-76b6419721';
 const FICHIERS=[
   "icones/apple-touch-icon.png",
   "icones/icone-192.png",

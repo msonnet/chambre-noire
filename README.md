@@ -26,7 +26,7 @@ Le livre s'installe sur l'écran d'accueil, se lit sans réseau et reprend là o
 
 - **Allumer la lampe** : au seuil, dans le noir, le voyant de l'interrupteur apparaît ; le lecteur allume lui-même la lampe rouge (toucher l'interrupteur ou l'écran).
 - **Sortir à tout moment** : « sortir », en haut à droite du labo. On ouvre le robinet pour rincer les tirages, puis on pousse la porte. La planche où l'on était est gardée ; « Rentrer dans la chambre noire » y ramène.
-- **Le tourne-disque** : son voyant ambré, sous « sortir ». Le toucher ouvre ses commandes : poser l'aiguille, piste suivante, relever l'aiguille, et retourner le disque (face A, face B). Le son passe par le labo (petit haut-parleur, craquements du vinyle) ; à la fin d'une face, l'aiguille tourne dans le dernier sillon ; l'aiguille se relève d'elle-même pour le silence de XVII. Les disques ne sont pas gardés hors ligne (25 Mo) : ils se lisent sur le réseau.
+- **Le tourne-disque** : on le voit dans l'image du labo, au seuil (plateau, disque, bras, pochette contre le mur) ; une fois la lampe allumée, « Voulez-vous écouter un disque ? » (oui / non merci ; la question ne revient pas si le disque tourne déjà ou si l'on a dit non). Quand le disque joue, il tourne dans l'image et le bras est posé dessus. Dans le labo, une note de musique (sous « sortir ») ouvre les commandes : pause / reprendre (au même endroit du morceau), morceau suivant, autre face. Son par le labo, assez bas (petit haut-parleur, craquements du vinyle) ; l'aiguille se relève d'elle-même pour le silence de XVII. Les disques se lisent sur le réseau (25 Mo, pas gardés hors ligne).
 
 ## Le disque
 

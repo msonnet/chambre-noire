@@ -76,12 +76,15 @@
 <button class="nav" id="suiv" type="button" aria-label="Planche suivante">›</button>
 <button id="son" type="button" aria-label="Son" aria-pressed="true">avec le son</button>
 <button id="sortir" type="button" aria-label="Sortir de la chambre noire">sortir</button>
-<button id="platine" type="button" aria-label="Le tourne-disque"><span></span></button>
+<button id="note" type="button" aria-label="Le tourne-disque"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 3.5v11.1a3.6 3.6 0 1 0 1.8 3.1V8h5.7V3.5z"/></svg></button>
 <div id="platine-commandes" hidden>
 <p class="pl-nom">Tourne-disque</p>
-<p id="pl-faces"></p>
 <p id="pl-piste"></p>
-<p class="pl-gestes"><button type="button" id="pl-poser">poser l’aiguille</button><button type="button" id="pl-suiv" hidden>piste suivante</button><button type="button" id="pl-lever" hidden>relever l’aiguille</button></p>
+<p class="pl-gestes"><button type="button" id="pl-lire">jouer le disque</button><button type="button" id="pl-pause" hidden>pause</button><button type="button" id="pl-suiv">morceau suivant</button><button type="button" id="pl-face">autre face</button></p>
+</div>
+<div id="question-disque" role="dialog" aria-label="Le tourne-disque" hidden>
+<p>Voulez-vous écouter un disque&nbsp;?</p>
+<p><button type="button" id="qd-oui">oui</button><button type="button" id="qd-non">non merci</button></p>
 </div>
 <noscript><p>Ce livre se développe du doigt&nbsp;: il a besoin de JavaScript.</p></noscript>
 </main>
