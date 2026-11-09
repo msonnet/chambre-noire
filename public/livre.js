@@ -5,7 +5,7 @@ function creerSon(){
   const NOMS=['obturateur','pas','coups','portes','ventilation','interrupteur','gouttes','bain','papier','pince','rincage','feuilles','dehors','platine','craquement','sillon','batiment','pincettes'];
   const CLE_SON='chambre-noire-son';
   /* Volumes (0 à 1) : les réglages principaux */
-  const VOL={ventilation:.16,dehors:.3,pas:.6,coup:.7,porte:.62,porteDouce:.5,interrupteur:.42,goutte:.18,bain:.55,egoutte:.13,
+  const VOL={ventilation:.12,dehors:.3,pas:.6,coup:.7,porte:.62,porteDouce:.5,interrupteur:.42,goutte:.18,bain:.55,egoutte:.13,
     obturateur:.55,papier:.5,pince:.42,rincage:.45,feuille:.3,
     musique:.16,craquement:.2,sillon:.2,platine:.32,batiment:.2,pincettes:.32};
   let actif=true;try{actif=localStorage.getItem(CLE_SON)!=='0';}catch(_){}
