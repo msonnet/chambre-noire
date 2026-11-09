@@ -52,7 +52,7 @@ body{position:fixed;inset:0}
 #revoir.visible{display:block}
 canvas.expo{position:absolute;inset:0;width:100%;height:100%;display:block}
 /* La feuille dans la cuvette, derrière le poème */
-.papier .planche[data-kind="texte"] .page::before{content:'';position:absolute;left:clamp(10px,4vw,20px);right:clamp(10px,4vw,20px);top:calc(max(12vh,64px) + var(--haut) - 36px);bottom:calc(84px + var(--bas));background:var(--feuille,#321b18) url(img/papier.webp) 0 0/256px;background-blend-mode:multiply;opacity:var(--bain,1);transform:translateY(calc((1 - var(--bain,1)) * 18px));z-index:-1}
+.papier .planche[data-kind="texte"] .page::before{content:'';position:absolute;left:clamp(10px,4vw,20px);right:clamp(10px,4vw,20px);top:calc(max(12vh,64px) + var(--haut) - 36px);bottom:calc(84px + var(--bas));background:var(--feuille,#321b18);z-index:-1}
 .papier .planche[data-kind="texte"] .page.serree::before{top:calc(max(6vh,40px) + var(--haut) - 24px)}
 .papier .planche[data-kind="texte"] .page.tres-serree::before{top:calc(14px + var(--haut));bottom:calc(72px + var(--bas))}
 .papier .planche[data-kind="texte"] .page.epi::before{top:calc(48px + var(--haut))}
@@ -95,7 +95,7 @@ svg.labo{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:
 .chapeau{margin:0 0 2em;font-size:13px;font-style:italic;line-height:1.5;color:var(--gris-papier)}
 /* La planche-contact : une feuille de papier photo posée sur la table ; la zone insolée est noire,
    les bandes de pellicule y sont tirées par contact (perforations, numéros de vue et nom du film sur le bord) */
-.feuille-contact{background:#f8f6f1 url(img/papier.webp) 0 0/256px;background-blend-mode:multiply;padding:12px;margin:0 -4px;box-shadow:0 1px 2px rgba(29,26,24,.2),0 10px 24px rgba(29,26,24,.12);transform:rotate(-.35deg)}
+.feuille-contact{background:#f8f6f1;padding:12px;margin:0 -4px;box-shadow:0 1px 2px rgba(29,26,24,.2),0 10px 24px rgba(29,26,24,.12);transform:rotate(-.35deg)}
 .grille{background:#0b0a0a;padding:10px 7px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 6px;align-items:start}
 @media (min-width:560px){.grille{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media (min-width:900px){.grille{grid-template-columns:repeat(7,minmax(0,1fr))}}
@@ -108,7 +108,7 @@ svg.labo{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:
 .vue{margin:0;position:relative}
 .numero{position:absolute;left:calc(100% + 2px);top:50%;transform:translateY(-50%)}
 .vue button{font:inherit;display:block;width:100%;aspect-ratio:2/3;position:relative;overflow:hidden;border:0;padding:0;cursor:pointer;border-radius:0;background:#0e0d0d}
-.vue.texte button.dev{background:#ece9e2 url(img/papier.webp) 0 0/160px;background-blend-mode:multiply}
+.vue.texte button.dev{background:#ece9e2}
 .vue.dessin button.dev{background:#121110}
 .vierge{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;writing-mode:vertical-rl;transform:rotate(180deg);font-size:8px;font-style:italic;letter-spacing:.06em;color:rgba(233,229,220,.3)}
 .vue .mini{text-align:left;position:absolute;left:0;top:0;width:480px;height:720px;transform-origin:0 0;pointer-events:none}
@@ -131,7 +131,7 @@ svg.labo{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:
 .lien:focus-visible{outline:1px solid var(--encre);outline-offset:4px}
 .mentions{margin:2.6em 0 0;font-size:11px;line-height:1.5;color:var(--gris-papier)}
 .mentions p{margin:0 0 .8em}
-.visionneuse{position:absolute;inset:0;background:var(--papier) url(img/papier.webp) 0 0/256px;background-blend-mode:multiply;display:none;touch-action:none;z-index:4}
+.visionneuse{position:absolute;inset:0;background:var(--papier);display:none;touch-action:none;z-index:4}
 .visionneuse.ouverte{display:block}
 .visionneuse.noire{background:var(--noir)}
 .tirage{position:absolute;inset:0}

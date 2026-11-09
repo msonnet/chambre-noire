@@ -2,7 +2,7 @@
    Fichier produit par outils/construire.py ; la version change dès qu'un fichier du livre change.
    Le disque (25 Mo) a son propre cache, qui ne change que si la musique change : il est téléchargé en arrière-plan,
    une fois le livre gardé, à la demande de la page. */
-const VERSION='chambre-noire-b0b5bef2f8';
+const VERSION='chambre-noire-90339d93f4';
 const MUSIQUE='chambre-noire-musique-0226ee7ba2';
 const FICHIERS=[
   "icones/apple-touch-icon.png",
@@ -30,7 +30,6 @@ const FICHIERS=[
   "img/d44.webp",
   "img/d48.webp",
   "img/d51.webp",
-  "img/papier.webp",
   "img/vignettes/d08.webp",
   "img/vignettes/d10.webp",
   "img/vignettes/d12.webp",

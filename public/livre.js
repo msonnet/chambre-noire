@@ -428,13 +428,11 @@ function peindreTexte(P){
   if(PAPIER){
     /* Une feuille dans la cuvette, rougie par la lampe ; le texte monte en sombre ;
        une fois fixé, on allume la lumière blanche pour regarder le tirage */
-    /* La feuille n'est là qu'une fois glissée dans le bain (P.bain) ; l'encre monte d'un papier vierge */
-    const fond=mix(mix(FEUILLE_FAIBLE,FEUILLE_LAMPE,lisse(P.eclair||0)),FEUILLE_JOUR,b),bain=lisse(P.bain||0);
-    P.el.style.setProperty('--feuille',rgb(fond));P.el.style.setProperty('--bain',bain.toFixed(3));
-    const encre=mix(ENCRE_LABO,ENCRE_JOUR,b),rgba=a=>'rgba('+encre.join(',')+','+a.toFixed(3)+')';
-    P.lignes.forEach((e,j)=>{const k=lisse(clamp((P.prog-.15-P.delais[j])/.55));e.style.color=rgba(k*bain);});
+    const fond=mix(mix(FEUILLE_FAIBLE,FEUILLE_LAMPE,lisse(P.eclair||0)),FEUILLE_JOUR,b);
+    P.el.style.setProperty('--feuille',rgb(fond));
+    P.lignes.forEach((e,j)=>{const k=lisse(clamp((P.prog-.15-P.delais[j])/.55));e.style.color=rgb(mix(mix(fond,ENCRE_LABO,k),ENCRE_JOUR,b));});
     const f=lisse(P.fin);
-    P.apres.forEach(e=>{e.style.color='rgba('+ENCRE_JOUR.join(',')+','+(f*bain).toFixed(3)+')';});
+    P.apres.forEach(e=>{e.style.color=rgb(mix(fond,ENCRE_JOUR,f));});
     return;
   }
   P.lignes.forEach((e,j)=>{const k=lisse(clamp((P.prog-.15-P.delais[j])/.55));e.style.color=rgb(mix(mix(NOIR,LATENT,k),OS,b));});
@@ -819,18 +817,16 @@ const types={
       P.lignes=[...P.el.querySelectorAll('.num,.v')].filter(e=>!e.closest('.apres'));
       P.apres=[...P.el.querySelectorAll('.apres .v')];
       P.delais=P.lignes.map((_,j)=>((j*7)%10)/10*.3);
-      P.prog=0;P.dev=false;P.blanc=0;P.silence=0;P.fin=P.apres.length?0:1;P.eclair=0;P.bain=0;
+      P.prog=0;P.dev=false;P.blanc=0;P.silence=0;P.fin=P.apres.length?0:1;P.eclair=0;
       peindreTexte(P);
     },
-    restaurer(P){P.prog=1;P.dev=true;P.blanc=1;P.fin=1;P.fixe=true;P.bain=1;peindreTexte(P);},
+    restaurer(P){P.prog=1;P.dev=true;P.blanc=1;P.fin=1;P.fixe=true;peindreTexte(P);},
     enter(P){ajuster(P);},
     down(P){P.silence=0;},
     tick(P,dt){
       let sale=false;
       /* La feuille s'éclaire quand la lampe s'intensifie */
-      if(PAPIER){const c=holding&&!P.dev?1:0;if(P.eclair!==c){P.eclair=c>P.eclair?Math.min(1,P.eclair+dt/1.2):Math.max(0,P.eclair-dt/1.2);sale=true;}
-        /* Au premier appui, la feuille glisse dans la cuvette ; elle y reste */
-        if(holding&&P.bain<1){P.bain=Math.min(1,P.bain+dt/.7);sale=true;}}
+      if(PAPIER){const c=holding&&!P.dev?1:0;if(P.eclair!==c){P.eclair=c>P.eclair?Math.min(1,P.eclair+dt/1.2):Math.max(0,P.eclair-dt/1.2);sale=true;}}
       if(!P.dev){
         SON.developper(P.id,holding);
         if(holding){
@@ -849,8 +845,8 @@ const types={
     consigne(P){
       if(P.fixe)return vus.suite?'':'Glisser vers la gauche pour continuer';
       if(P.dev||holding)return '';
-      if(!vus.texte)return PAPIER?'Garder le doigt sur l’écran pour développer le tirage':'Garder le doigt sur la page pour développer le tirage';
-      if(idle>6)return PAPIER?'Garder le doigt sur l’écran':'Garder le doigt sur la page';
+      if(!vus.texte)return 'Garder le doigt sur la page pour développer le tirage';
+      if(idle>6)return 'Garder le doigt sur la page';
       return '';
     }
   },
