@@ -126,7 +126,7 @@ function creerSon(){
   }
   /* Le tourne-disque : un disque à deux faces (musique/disques.json), lu par un élément audio qui passe par le labo
      (un petit haut-parleur, les craquements du vinyle) ; à la fin de la face, l'aiguille tourne dans le dernier sillon. */
-  const PL={disques:null,face:'a',piste:0,joue:false,arret:false,fin:false,el:null,g:null,craq:null,sillon:null,charge:null,blobs:{},enCours:{},dispo:false,amorce:false,tPose:0,pose:false};
+  const PL={disques:null,face:'a',piste:0,joue:false,arret:false,fin:false,el:null,g:null,silence:false,craq:null,sillon:null,charge:null,blobs:{},enCours:{},dispo:false,amorce:false,tPose:0,pose:false};
   /* Le bras met BRAS secondes à venir au-dessus du disque (transition de .labo .bras dans style.css) : l'aiguille se pose
      alors, on l'entend toucher le sillon, les craquements commencent, puis la musique (après le blanc du début du morceau) */
   const BRAS=1.75;
@@ -166,6 +166,7 @@ function creerSon(){
       s.connect(hp);hp.connect(lp);lp.connect(g);g.connect(bus.labo);
     }catch(e){erreurs.push('platine : '+(e&&e.message||e));}
     el.addEventListener('ended',()=>{
+      if(PL.silence)return;
       const pistes=PL.disques[PL.face].pistes;
       if(PL.piste<pistes.length-1){PL.piste++;plCharger(true);}
       else{PL.fin=true;plBoucle('craq',false);if(PL.joue)plBoucle('sillon',true);}
@@ -182,20 +183,29 @@ function creerSon(){
   function plCharger(jouerTout){
     const f=plFichier(PL.face,PL.piste),cle=PL.face+PL.piste,u=PL.blobs[f];
     PL.charge=cle;
-    if(u||navigator.onLine){PL.el.src=u||f;PL.el.currentTime=0;if(jouerTout)plJouer();}
-    else plPrecharger(PL.face,PL.piste).then(v=>{if(PL.charge!==cle||!PL.joue)return;PL.el.src=v||f;PL.el.currentTime=0;if(jouerTout)plJouer();});
+    if(u||navigator.onLine){PL.silence=false;PL.el.src=u||f;PL.el.currentTime=0;if(jouerTout)plJouer();}
+    else plPrecharger(PL.face,PL.piste).then(v=>{if(PL.charge!==cle||!PL.joue)return;PL.silence=false;PL.el.src=v||f;PL.el.currentTime=0;if(jouerTout)plJouer();});
     /* Le morceau suivant est chargé pendant celui-ci */
     const n=PL.disques[PL.face].pistes.length;plPrecharger(PL.face,(PL.piste+1)%n);
   }
   function plJouer(){const pr=PL.el.play();if(pr&&pr.catch)pr.catch(e=>erreurs.push('platine : '+(e&&e.message||e)));}
-  /* Le téléphone ne laisse jouer un son qu'au toucher : au premier toucher, on fait démarrer l'élément audio en silence et on
-     l'arrête aussitôt ; il pourra ensuite jouer seul, quand l'aiguille se posera */
+  /* Le téléphone ne laisse jouer un son qu'au toucher. Au premier toucher, l'élément audio joue un court fichier vraiment
+     silencieux (rien à entendre, quelle que soit la façon dont le téléphone le fait sonner) ; il pourra ensuite jouer seul
+     le morceau, quand l'aiguille sera posée. Le morceau lui-même n'est chargé qu'à ce moment-là. */
+  let muet=null;
+  function silence(){
+    if(muet)return muet;
+    const n=1600,b=new ArrayBuffer(44+n),v=new DataView(b),w=(o,t)=>{for(let i=0;i<t.length;i++)v.setUint8(o+i,t.charCodeAt(i));};
+    w(0,'RIFF');v.setUint32(4,36+n,true);w(8,'WAVE');w(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);
+    v.setUint32(24,8000,true);v.setUint32(28,8000,true);v.setUint16(32,1,true);v.setUint16(34,8,true);w(36,'data');v.setUint32(40,n,true);
+    for(let i=0;i<n;i++)v.setUint8(44+i,128);
+    return muet=URL.createObjectURL(new Blob([b],{type:'audio/wav'}));
+  }
   function plAmorcer(){
-    if(PL.amorce||!PL.el||!PL.el.src)return;
-    if(PL.g)PL.g.gain.value=0;
+    if(PL.amorce||!PL.el)return;
+    PL.silence=true;PL.charge=null;PL.el.src=silence();
     const pr=PL.el.play();
-    const fin=()=>{PL.amorce=true;if(!PL.pose){try{PL.el.pause();PL.el.currentTime=0;}catch(_){}}if(PL.g)PL.g.gain.value=VOL.musique;};
-    if(pr&&pr.then)pr.then(fin,()=>{if(PL.g)PL.g.gain.value=VOL.musique;});else fin();
+    if(pr&&pr.then)pr.then(()=>{PL.amorce=true;},e=>erreurs.push('platine amorce : '+(e&&e.message||e)));else PL.amorce=true;
   }
   /* Poser l'aiguille dans `delai` secondes (le temps que le bras arrive), puis jouer depuis le début du morceau ou là où on l'avait relevée */
   function plPoser(delai,reprise,blanc){
@@ -208,9 +218,7 @@ function creerSon(){
       /* l'aiguille court dans le sillon, puis le morceau */
       PL.tPose=setTimeout(()=>{
         if(!PL.joue)return;
-        if(PL.g)PL.g.gain.value=VOL.musique;
-        if(reprise)plJouer();
-        else if(PL.el.src){try{PL.el.currentTime=0;}catch(_){}plJouer();}
+        if(reprise&&!PL.silence)plJouer();
         else plCharger(true);
       },(blanc!=null?blanc:reprise?REPRISE:ENTREE)*1000);
     },delai*1000);
@@ -230,7 +238,6 @@ function creerSon(){
       plChaine();if(!PL.el)return;
       PL.joue=true;
       const reprise=PL.arret&&PL.charge===PL.face+PL.piste;
-      if(!reprise&&!PL.fin)plCharger(false);
       plAmorcer();PL.arret=false;
       plPoser(BRAS,reprise);
     },
@@ -249,7 +256,7 @@ function creerSon(){
       /* L'aiguille se relève, va au morceau suivant et se repose ; si le bras était au repos, il vient d'abord au-dessus du disque */
       const dessus=PL.joue;try{PL.el.pause();}catch(_){}plBoucle('craq',false);
       if(dessus&&PL.pose)aiguille(false);
-      PL.joue=true;plCharger(false);plAmorcer();plPoser(dessus?.7:BRAS,false,dessus?ENTRE_DEUX:ENTREE);
+      PL.joue=true;plAmorcer();plPoser(dessus?.7:BRAS,false,dessus?ENTRE_DEUX:ENTREE);
     },
     /* L'autre face : on retourne le disque et l'on pose l'aiguille au début */
     autreFace(){
@@ -259,7 +266,7 @@ function creerSon(){
       if(PL.joue){PL.joue=false;clearTimeout(PL.tPose);try{PL.el.pause();}catch(_){}plBoucle('craq',false);plBoucle('sillon',false);if(PL.pose)aiguille(false);PL.pose=false;}
       PL.face=f;PL.piste=0;PL.fin=false;PL.arret=false;try{localStorage.setItem('chambre-noire-face',f);}catch(_){}
       jouer('feuilles',pioche('feuilles'),{t:ctx.currentTime+.3,gain:VOL.feuille,bus:'labo'});
-      PL.joue=true;plCharger(false);plAmorcer();plPoser(Math.max(BRAS,1.3),false);
+      PL.joue=true;plAmorcer();plPoser(Math.max(BRAS,1.3),false);
     },
     /* L'onglet caché : le disque s'arrête de tourner avec lui */
     visible(on){if(PL.el&&PL.joue&&PL.pose&&!PL.fin){try{on?plJouer():PL.el.pause();}catch(_){}}}
