@@ -2,7 +2,7 @@
 
 Le recueil *Chambre noire* (19 poèmes, 21 dessins) de Nathan Sonnet, en livre à développer du doigt sur téléphone.
 
-On entre par un sténopé, on frappe à la porte, on attend que l'œil s'habitue au noir. Sous la lampe rouge, on garde le doigt sur la page pour développer les poèmes, on promène une lumière inactinique dans le noir pour révéler les dessins. En sortant, on rince les tirages et on retrouve la planche-contact au jour.
+On entre par un sténopé, on frappe à la porte, on attend que l'œil s'habitue au noir. Sous la lampe rouge, on garde le doigt sur la page pour développer les poèmes, on promène une lumière inactinique dans le noir pour révéler les dessins. En sortant, on rince les tirages et l'on retrouve la planche-contact dans la pièce claire du labo, sur la paillasse.
 
 Le livre s'installe sur l'écran d'accueil, se lit sans réseau et reprend là où le lecteur s'était arrêté.
 
@@ -20,7 +20,7 @@ Le livre s'installe sur l'écran d'accueil, se lit sans réseau et reprend là o
 ## Le seuil et la planche-contact
 
 - **Le seuil** : l'œil s'habitue au noir (on devine des formes), puis la lampe rouge s'allume et montre le labo : la lampe, la corde à linge où sèchent les derniers tirages du lecteur (à la première visite, des bandes-test et des pinces qui attendent), l'agrandisseur, les flacons, le robinet qui goutte, les trois cuvettes (révélateur, arrêt, fixateur). On s'approche de la cuvette et le premier tirage commence. Réglages : `SEUIL_LAMPE`, `SEUIL_APPROCHE`, `SEUIL_FIN` ; dessin dans `decor()`.
-- **Planche-contact** : une vraie planche 18×24, d'un seul tenant : les 42 vues en sept bandes de six (`PAR_BANDE`) posées à la main sous la vitre, à l'échelle d'un film 35 mm (`--mm`) : vues 24×36 aux coins arrondis, huit perforations par vue, numéros de vue et nom du film en tout petit sur le bord, quelques poussières et un cheveu. La pellicule vierge (vues pas encore développées) garde le gris sombre du support. Un cadre au crayon gras rouge, tiré à main levée (filtre `#cire`), entoure les vues regardées à l'agrandisseur. Garder le doigt sur la planche fait venir le **compte-fils** (`LOUPE`), qui suit le doigt ; un toucher bref agrandit la vue.
+- **Planche-contact** : une vraie planche 18×24, d'un seul tenant : les 42 vues en sept bandes de six (`PAR_BANDE`) posées à la main sous la vitre, à l'échelle d'un film 35 mm (`--mm`) : vues 24×36 aux coins arrondis, huit perforations par vue, numéros de vue et nom du film en tout petit sur le bord, quelques poussières et un cheveu. La pellicule vierge (vues pas encore développées) garde le gris sombre du support. Un cadre au crayon gras rouge, tiré à main levée (filtre `#cire`), entoure les vues regardées à l'agrandisseur. Garder le doigt sur la planche fait venir le **compte-fils** (`LOUPE`), qui suit le doigt ; un toucher bref agrandit la vue. La planche est posée sur la paillasse de la pièce claire du labo (résine sombre sous la lumière blanche du plafond), sans bord blanc, avec la pince à tirages en bambou, quelques gouttes et le crayon gras rouge (objets dessinés dans `outils/gabarit.html`, classe `.objet`).
 
 ## Les gestes uniques de la visite
 

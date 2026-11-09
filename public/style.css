@@ -88,16 +88,26 @@ svg.labo{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:
 
 /* Dehors : la planche-contact */
 .porte{position:absolute;inset:0;background:var(--papier);clip-path:inset(0 50% 0 50%)}
-.dehors{position:absolute;inset:0;overflow-y:auto;touch-action:pan-y;color:var(--encre);opacity:0;visibility:hidden;transition:opacity 1.4s ease,visibility 1.4s;-webkit-overflow-scrolling:touch;user-select:none}
+.dehors{position:absolute;inset:0;overflow-y:auto;touch-action:pan-y;color:#e6e0d4;opacity:0;visibility:hidden;transition:opacity 1.4s ease,visibility 1.4s;-webkit-overflow-scrolling:touch;user-select:none}
 .dehors.visible{opacity:1;visibility:visible}
+/* La pièce claire du labo : la paillasse en résine sombre, sous la lumière blanche du plafond */
+.planche[data-kind="sortie"] .porte,.dehors{background:radial-gradient(ellipse 130% 62% at 50% 16%,rgba(255,250,240,.16),rgba(255,250,240,.05) 55%,transparent 80%),radial-gradient(ellipse 140% 110% at 50% 40%,transparent 55%,rgba(0,0,0,.3) 100%),#4a4742}
+.dehors{background-image:radial-gradient(ellipse 130% 62% at 50% 16%,rgba(255,250,240,.16),rgba(255,250,240,.05) 55%,transparent 80%),radial-gradient(ellipse 140% 110% at 50% 40%,transparent 55%,rgba(0,0,0,.32) 100%),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .55 -.18'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)' opacity='.22'/%3E%3C/svg%3E");background-color:#4a4742;background-attachment:scroll,scroll,local}
+.dehors-page{position:relative}
+.objet{position:absolute;pointer-events:none;overflow:visible}
+.objet.pince{right:calc(-1 * clamp(20px,6vw,40px) - 34px);top:calc(14px + var(--haut));width:180px;height:48px;transform:rotate(-24deg);transform-origin:100% 50%}
+.objet.eau{left:calc(-1 * clamp(20px,6vw,40px));top:0;width:390px;height:220px}
+.objet.crayon-gras{right:5%;bottom:-38px;width:176px;height:32px;transform:rotate(-13deg);z-index:2}
 .dehors-page{max-width:40rem;margin:0 auto;padding:calc(max(9vh,52px) + var(--haut)) clamp(20px,6vw,40px) calc(56px + var(--bas))}
-.dehors h2{font-family:var(--f-titre);font-weight:400;font-size:24px;margin:0 0 .35em;text-wrap:balance}
-.chapeau{margin:0 0 2em;font-size:13px;font-style:italic;line-height:1.5;color:var(--gris-papier)}
+.dehors h2{position:relative;font-family:var(--f-titre);font-weight:400;font-size:24px;margin:0 0 .35em;text-wrap:balance;color:#efe9dd;text-shadow:0 1px 2px rgba(0,0,0,.25)}
+.chapeau{position:relative;margin:0 0 2em;font-size:13px;font-style:italic;line-height:1.5;color:#b9b3a8;max-width:30em}
 /* La planche-contact : une feuille de papier photo 18×24 posée sur la table, sous la lumière blanche. La zone insolée
    est noire ; les sept bandes de pellicule y sont tirées par contact. Le support du film, non exposé, sort en gris très
    sombre ; les perforations laissent passer toute la lumière : elles sont aussi noires que le reste. Tout est à l'échelle
    du film (--mm, réglé par le script). */
-.feuille-contact{position:relative;background:#f5f2eb;padding:10px 11px 26px 9px;margin:0 calc(6px - clamp(20px,6vw,40px));box-shadow:0 .5px 1px rgba(29,26,24,.22),0 8px 22px rgba(29,26,24,.13);transform:rotate(-.35deg)}
+.feuille-contact{position:relative;margin:0 calc(8px - clamp(20px,6vw,40px));box-shadow:0 1px 1.5px rgba(0,0,0,.45),0 7px 20px rgba(0,0,0,.38);transform:rotate(-.6deg)}
+/* Le papier brillant renvoie la lumière du plafond */
+.feuille-contact::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:4;background:linear-gradient(118deg,transparent 22%,rgba(255,252,245,.045) 38%,rgba(255,252,245,.09) 46%,rgba(255,252,245,.03) 56%,transparent 70%)}
 .grille{--mm:1.3px;position:relative;background:#0a0909;padding:calc(2.2*var(--mm)) calc(2.6*var(--mm)) calc(3*var(--mm));display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:0 calc(1.6*var(--mm));align-items:start;box-shadow:0 0 1.5px .5px rgba(10,9,9,.7);-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 .bande{position:relative;background:#1a1816;display:flex;flex-direction:column;box-shadow:0 0 .5px rgba(26,24,22,.8)}
 .vue{margin:0;position:relative;aspect-ratio:35/38;
@@ -138,11 +148,11 @@ svg.labo{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:
 .cf-vue .grille{box-shadow:none}
 .compte-fils::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:2;background:radial-gradient(circle at 50% 50%,transparent 60%,rgba(0,0,0,.3) 100%),linear-gradient(140deg,rgba(255,255,255,.08),transparent 38%)}
 .compte-fils::before{content:'';position:absolute;left:10px;right:10px;bottom:5px;height:7px;z-index:3;opacity:.55;background:linear-gradient(to top,rgba(236,230,218,.75) 0 1px,transparent 1px),repeating-linear-gradient(90deg,rgba(236,230,218,.75) 0 1px,transparent 1px 4.4px) left bottom/100% 4px no-repeat,repeating-linear-gradient(90deg,rgba(236,230,218,.75) 0 1px,transparent 1px 22px)}
-.actions{display:flex;flex-direction:column;align-items:flex-start;gap:16px;margin-top:2.8em}
-.lien{font:inherit;font-size:15px;color:var(--encre);background:none;border:0;border-bottom:1px solid rgba(29,26,24,.35);padding:.2em 0;cursor:pointer}
-.lien.discret{font-size:12px;color:var(--gris-papier);border-color:rgba(29,26,24,.2)}
-.lien:focus-visible{outline:1px solid var(--encre);outline-offset:4px}
-.mentions{margin:2.6em 0 0;font-size:11px;line-height:1.5;color:var(--gris-papier)}
+.actions{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:16px;margin-top:4.6em}
+.lien{position:relative;font:inherit;font-size:15px;color:#ece6da;background:none;border:0;border-bottom:1px solid rgba(236,230,218,.35);padding:.2em 0;cursor:pointer}
+.lien.discret{font-size:12px;color:#aaa498;border-color:rgba(236,230,218,.2)}
+.lien:focus-visible{outline:1px solid #ece6da;outline-offset:4px}
+.mentions{position:relative;margin:2.6em 0 0;font-size:11px;line-height:1.5;color:#a29c91}
 .mentions p{margin:0 0 .8em}
 .visionneuse{position:absolute;inset:0;background:var(--papier);display:none;touch-action:none;z-index:4}
 .visionneuse.ouverte{display:block}

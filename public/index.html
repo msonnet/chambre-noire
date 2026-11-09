@@ -325,9 +325,37 @@
 <div class="porte" aria-hidden="true"></div>
 <div class="dehors">
 <div class="dehors-page">
+<svg class="objet pince" viewBox="0 0 180 48" aria-hidden="true">
+<defs><linearGradient id="bambou" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e2c48f"/><stop offset=".5" stop-color="#c9a46a"/><stop offset="1" stop-color="#9c7a45"/></linearGradient>
+<filter id="pi-ombre" x="-10%" y="-60%" width="120%" height="220%"><feGaussianBlur stdDeviation="2.4"/></filter></defs>
+<g fill="#000" opacity=".5" filter="url(#pi-ombre)" transform="translate(3 5)"><path d="M6 19 L156 8 L158 14 L8 25Z"/><path d="M6 25 L156 34 L156 40 L6 29Z"/></g>
+<path d="M6 19 L156 8 L158 14 L8 25Z" fill="url(#bambou)"/>
+<path d="M6 25 L156 34 L156 40 L6 29Z" fill="url(#bambou)"/>
+<g stroke="rgba(110,80,40,.35)" stroke-width=".5" fill="none"><path d="M30 19.6 L120 13M44 21.5 L140 14.2M30 27.2 L120 32.6M48 28.6 L140 34.6"/></g>
+<path d="M138 9.3 L157 7.9 L159.5 14 L139 15.4Z" fill="#cfcac0"/><path d="M138 32.9 L157 34 L157 40.2 L138 38.9Z" fill="#cfcac0"/>
+<g stroke="rgba(60,56,50,.35)" stroke-width=".6"><path d="M143 9.2l1 6M148 8.8l1 6M143 33.2v6M148 33.5v6"/></g>
+<rect x="1" y="16.5" width="24" height="15" rx="2.5" fill="#a98450"/><rect x="1" y="16.5" width="24" height="5" rx="2.5" fill="rgba(255,240,210,.25)"/>
+<circle cx="13" cy="24" r="2.6" fill="#8e8a84" stroke="#5b5852" stroke-width=".8"/><circle cx="12.3" cy="23.3" r=".8" fill="rgba(255,255,255,.6)"/>
+</svg>
+<svg class="objet eau" viewBox="0 0 390 220" aria-hidden="true">
+<defs><radialGradient id="goutte" cx=".38" cy=".34" r=".7"><stop offset="0" stop-color="rgba(255,255,255,.55)"/><stop offset=".22" stop-color="rgba(255,255,255,.12)"/><stop offset=".75" stop-color="rgba(255,255,255,.03)"/><stop offset="1" stop-color="rgba(0,0,0,.28)"/></radialGradient></defs>
+<g fill="url(#goutte)" transform="translate(84 -66)"><ellipse cx="236" cy="128" rx="5" ry="4.2"/><ellipse cx="254" cy="146" rx="2.6" ry="2.3"/><ellipse cx="214" cy="104" rx="3.2" ry="2.8"/><ellipse cx="300" cy="168" rx="2" ry="1.8"/><ellipse cx="246" cy="112" rx="1.6" ry="1.4"/><path d="M268 150 q14 -4 26 6 q6 7 -4 9 q-12 1 -20 -6 q-6 -6 -2 -9z"/></g>
+</svg>
 <h2>Planche-contact</h2>
 <p class="chapeau">Les vues développées dans la chambre noire, tirées par contact. Garder le doigt sur la planche pour la regarder au compte-fils&nbsp;; toucher une vue pour l’agrandir. Le crayon gras garde la trace des vues regardées.</p>
-<div class="feuille-contact"><div class="grille" id="grille"></div></div>
+<div class="feuille-contact"><div class="grille" id="grille"></div><svg class="objet crayon-gras" viewBox="0 0 190 34" aria-hidden="true">
+<defs><linearGradient id="cg-corps" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5e110b"/><stop offset=".28" stop-color="#b52c1c"/><stop offset=".48" stop-color="#d4503a"/><stop offset=".7" stop-color="#a62717"/><stop offset="1" stop-color="#4f0e08"/></linearGradient>
+<linearGradient id="cg-cire" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4c0c08"/><stop offset=".4" stop-color="#9c2416"/><stop offset=".55" stop-color="#b8402c"/><stop offset="1" stop-color="#410a06"/></linearGradient>
+<filter id="cg-ombre" x="-10%" y="-60%" width="120%" height="220%"><feGaussianBlur stdDeviation="2.2"/></filter></defs>
+<rect x="8" y="13" width="150" height="12" rx="5" fill="#000" opacity=".55" filter="url(#cg-ombre)" transform="translate(2 4)"/>
+<path d="M155 17 c8 0 12 -5 19 -3 s8 8 1 11 s-9 2 -12 6" fill="none" stroke="#d6d0c4" stroke-width=".9" stroke-linecap="round"/>
+<path d="M3 17 Q3 12.2 9 11.6 L23 11 L23 23 L9 22.4 Q3 21.8 3 17Z" fill="url(#cg-cire)"/>
+<path d="M4.5 15.6 Q6 13.2 9.5 12.8" fill="none" stroke="rgba(255,200,180,.35)" stroke-width=".8" stroke-linecap="round"/>
+<rect x="21" y="10.5" width="134" height="13" rx="1.6" fill="url(#cg-corps)"/>
+<path d="M21 10.5 h4 l2 13 h-6z" fill="#7a170e"/>
+<g stroke="rgba(255,226,206,.28)" stroke-width=".55"><path d="M35 10.5 l5 13M52 10.5 l5 13M69 10.5 l5 13M86 10.5 l5 13M103 10.5 l5 13M120 10.5 l5 13M137 10.5 l5 13"/></g>
+<rect x="151" y="10.5" width="4" height="13" rx="1.2" fill="#3f0b07"/>
+</svg></div>
 <div class="actions">
 <button class="lien" id="rentrer" type="button">Rentrer dans la chambre noire</button>
 <button class="lien discret" id="effacer" type="button">Effacer les tirages et tout redévelopper</button>
