@@ -1033,9 +1033,11 @@ function porteEtat(P,e){
 /* Le geste « pousser la porte », seconde par seconde (accordé au son de la porte, qui démarre à 0,6 s) :
    l'interrupteur, la lampe qui s'éteint et le voyant qui s'allume ; la béquille qu'on abaisse ; le pêne qui se libère,
    la porte qui décolle de son joint, puis qui s'ouvre, lourde. Puis on marche : quatre pas jusqu'à la paillasse,
-   à pas réguliers (cadence), la tête qui monte et se balance à chaque pas ; une fois arrêté, la planche-contact vient en fondu. */
+   à pas réguliers (cadence), la tête qui monte et se balance à chaque pas. Pendant les derniers pas, la planche-contact vient
+   en fondu par-dessus la pièce claire (prepare : on la prépare, invisible, dès qu'on marche ; planche : début du fondu ;
+   fondu : sa durée), et elle continue d'approcher un peu (approche), pour que le mouvement ne s'arrête pas pendant le fondu. */
 const PORTE={nuit:.05,poignee:.55,pene:1.5,ouvre:2.2,ouvert:1.6,lache:2.05,marche:3.45,duree:2.75,cadence:.64,pas:4,avance:560,
-  tete:7,balance:3.5,planche:6.05,fin:7.15};
+  tete:7,balance:3.5,prepare:3.6,planche:5.3,fondu:1.6,approche:.955};
 function porteTemps(t){
   if(reduit)return{th:t>.5?74:0,poignee:0,nuit:.7*clamp(t/.3),voyant:clamp(t/.3)};
   const T=PORTE,u=clamp((t-T.marche)/T.duree),av=(1-Math.cos(Math.PI*u))/2,vit=Math.sin(Math.PI*u),
@@ -1226,7 +1228,7 @@ const types={
     }
   },
   sortie:{
-    init(P){P.sas=P.el.querySelector('.sas');P.dehors=P.el.querySelector('.dehors');P.decor=P.el.querySelector('.labo');P.aiguille=P.el.querySelector('.aiguille');
+    init(P){P.sas=P.el.querySelector('.sas');P.dehors=P.el.querySelector('.dehors');P.feuilleP=P.dehors.querySelector('.dehors-page');P.decor=P.el.querySelector('.labo');P.aiguille=P.el.querySelector('.aiguille');
       P.t=0;P.etape='dehors';P.direct=false;P.garder=false;P.rince=0;P.pas=0;P.vu=false;
       porteLabo(P);
       /* En sortant, on peut lever l'aiguille du disque : on touche le tourne-disque */
@@ -1235,7 +1237,8 @@ const types={
     enter(P){
       fermerVis();construireGrille();P.dehors.scrollTop=0;stage.classList.remove('defile');P.garder=false;
       /* La porte revient fermée, la lampe allumée */
-      P.sas.style.transition=P.dehors.style.transition='';P.sas.classList.remove('marche');
+      Object.assign(P.dehors.style,{transition:'',visibility:'',opacity:'',willChange:''});Object.assign(P.feuilleP.style,{transition:'',transform:'',willChange:''});
+      P.sas.style.transition='';P.sas.classList.remove('marche');P.prep=false;
       P.sas.style.opacity=0;P.sas.style.visibility='hidden';echelleSas(P);porteEtat(P,{});P.pas=0;P.vu=false;
       if(P.direct){P.direct=false;P.etape='dehors';P.decor.style.opacity=0;P.dehors.classList.add('visible');}
       else{P.etape='rincer';P.t=0;decor(P);P.decor.style.opacity=1;P.dehors.classList.remove('visible');}
@@ -1244,7 +1247,7 @@ const types={
     /* Premier geste : ouvrir le robinet ; second geste : pousser la porte */
     down(P){
       if(P.etape==='rincer'){P.etape='rince';P.t=0;P.rince=SON.rincer()||1.2;}
-      else if(P.etape==='porte'){P.etape='ouvre';P.t=0;P.pas=0;P.vu=false;P.sas.style.opacity=1;P.decor.style.opacity=0;P.sas.classList.add('marche');SON.pousser();}
+      else if(P.etape==='porte'){P.etape='ouvre';P.t=0;P.pas=0;P.vu=false;P.prep=false;P.sas.style.opacity=1;P.decor.style.opacity=0;P.sas.classList.add('marche');SON.pousser();}
     },
     tick(P,dt){
       if(P.etape==='dehors')return;
@@ -1262,14 +1265,25 @@ const types={
         const e=porteTemps(P.t);porteEtat(P,e);
         /* Les pas : un à chaque fois que le pied se pose */
         const k=Math.floor(e.pas||0);if(k>P.pas&&k<=PORTE.pas){P.pas=k;SON.marcher(k,k===PORTE.pas);}
-        /* Arrivé à la paillasse, on s'arrête : la planche-contact vient en fondu, la pièce claire s'efface */
-        const T=reduit?{planche:.8,fin:1.7}:PORTE;
-        if(!P.vu&&P.t>=T.planche){
-          P.vu=true;P.dehors.style.transition='opacity 1.3s ease,visibility 1.3s';
-          P.dehors.classList.add('visible');requestAnimationFrame(echelle);
+        /* La planche-contact, préparée tôt (mise en page et peinture faites pendant qu'on marche, pour que rien n'accroche
+           pendant le fondu), vient par-dessus la pièce claire pendant les derniers pas ; la pièce reste entière dessous
+           jusqu'à la fin du fondu (sinon l'image passerait par un creux sombre) ; la planche continue d'approcher. */
+        const T=reduit?{prepare:.5,planche:.8,fondu:.8,approche:1}:PORTE,D=P.dehors;
+        if(!P.prep&&P.t>=T.prepare){
+          P.prep=true;echelle();
+          Object.assign(D.style,{transition:'none',visibility:'visible',opacity:'.01',willChange:'opacity'});
+          Object.assign(P.feuilleP.style,{transition:'none',transform:T.approche!==1?'scale('+T.approche+')':'',willChange:'transform'});
         }
-        if(P.vu)P.sas.style.opacity=(1-lisse(clamp((P.t-T.planche-.15)/.9))).toFixed(3);
-        if(P.t>=T.fin){P.etape='dehors';P.sas.style.visibility='hidden';P.sas.classList.remove('marche');}
+        if(!P.vu&&P.t>=T.planche){
+          P.vu=true;void D.offsetWidth;
+          D.style.transition='opacity '+T.fondu+'s cubic-bezier(.4,0,.6,1)';D.style.opacity='1';D.classList.add('visible');
+          P.feuilleP.style.transition='transform '+(T.fondu+.9)+'s cubic-bezier(.1,.55,.3,1)';P.feuilleP.style.transform='';
+        }
+        if(P.t>=T.planche+T.fondu+.05){
+          P.etape='dehors';P.sas.style.visibility='hidden';P.sas.classList.remove('marche');
+          /* Le fondu fini, la planche redevient une page ordinaire */
+          setTimeout(()=>{if(P.etape!=='dehors')return;Object.assign(D.style,{transition:'',visibility:'',opacity:'',willChange:''});P.feuilleP.style.willChange='';},1200);
+        }
       }
     },
     lampe(P){return P.etape==='rincer'||P.etape==='rince'||P.etape==='porte'||(P.etape==='ouvre'&&P.t<.1)?AMBIANCE:0;},
